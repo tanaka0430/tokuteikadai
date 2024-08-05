@@ -8,6 +8,9 @@ app = FastAPI()
 # Jinja2のテンプレートディレクトリを定義
 templates = Jinja2Templates(directory="templates")
 
+@app.get("/")
+async def read_root(request: Request):
+    return templates.TemplateResponse("users.html", {"request": request})
 
 @app.get("/users")
 async def get_users_count(request: Request):
