@@ -12,7 +12,7 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/users")
 async def get_users_count(request: Request):
     # SSHトンネルを通じてMySQLに接続
-    server, connection = create_db_connection()
+    connection = create_db_connection()
 
     try:
         with connection.cursor() as cursor:
@@ -21,7 +21,7 @@ async def get_users_count(request: Request):
             user_count = result["user_count"]
     finally:
         connection.close()
-        server.stop()
+
     
     # index.htmlテンプレートをレンダリングし、ユーザー数を渡す
     return templates.TemplateResponse("users.html", {"request": request, "users_count": user_count})
@@ -34,7 +34,7 @@ async def register_user(
     gender: str = Form(...)
 ):
     # SSHトンネルを通じてMySQLに接続
-    server, connection = create_db_connection()
+    connection = create_db_connection()
     
     try:
         with connection.cursor() as cursor:
@@ -46,7 +46,7 @@ async def register_user(
             connection.commit()
     finally:
         connection.close()
-        server.stop()
+
     
     # ユーザー登録後に/usersエンドポイントにリダイレクト
     return RedirectResponse(url="/users", status_code=303)
