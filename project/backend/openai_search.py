@@ -1,12 +1,8 @@
 from openai import OpenAI
-import json
-import sys
 import os
 from db_config import create_db_connection  # DB接続をインポート
-from sklearn.metrics.pairwise import cosine_similarity
-import pandas as pd
 import numpy as np
-import ast
+import faiss
 from dotenv import load_dotenv
 # ec２サーバーで作成した.envファイルを読み込む。.envはgitignoreに追加
 load_dotenv()
@@ -14,9 +10,9 @@ load_dotenv()
 
 # OpenAIクライアントのインスタンスを作成
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
+index = faiss.read_index("faiss_index.bin")
 connection = create_db_connection()
-question = str(input())
+
 
 def get_embedding(text):
     response = client.embeddings.create(
@@ -24,61 +20,33 @@ def get_embedding(text):
         input=text
     )
     # 埋め込みベクトルを取得
-    return response.data[0].embedding
+    return  np.array([response.data[0].embedding]).astype("float32")
+
+def index_search(question):
+    D,I = index.search(get_embedding(question), 3)#3件取得
+    # Iの各値に1を加算
+    incremented_ids = [id + 1 for sublist in I for id in sublist]  # 一次元リストにフラット化しつつ加算
+    return incremented_ids
+
+def read_db(id_list,order_num):
+    try:
+        with connection.cursor() as cursor:
+
+            # プレースホルダの数に合わせてクエリを作成
+            query = "SELECT * FROM aoyama_kougi WHERE id IN (%s)" % ','.join(['%s'] * len(id_list))
+            # クエリを実行
+            cursor.execute(query, id_list)
+            subjects = cursor.fetchall()
+
+            return subjects[order_num]
+
+    finally:
+        if connection.open:
+            connection.close()
 
 
-
-try:
-    with connection.cursor() as cursor:
-        # ssi_embテーブルのaoyama_kougi_idとembカラムを全件取得するクエリ
-        query = """
-        SELECT aoyama_kougi_id, openai_emb
-        FROM aoyama_openai_emb
-        """
-        cursor.execute(query)
-        result = cursor.fetchall()  # 全件取得
-
-        # DataFrameに変換
-        df = pd.DataFrame(result, columns=['aoyama_kougi_id', 'openai_emb'])
-        
-
-        # 'emb' をリストに変換し、numpy配列に変換
-        def decode_and_convert(x):
-            if isinstance(x, bytes):
-                x = x.decode('utf-8')  # bytesをstrにデコード
-            return np.array(ast.literal_eval(x)).reshape(1, -1)
-
-        df['openai_emb'] = df['openai_emb'].apply(decode_and_convert)
-        
-        
-        # コサイン類似度を計算
-        df['similarity'] = df['openai_emb'].apply(
-            lambda openai_emb: cosine_similarity(
-                np.array(get_embedding(question)).reshape(1, -1),  # 質問の埋め込みを2次元配列に変換
-                np.array(openai_emb).reshape(1, -1)  # データベースからの埋め込みも2次元配列に変換
-            )[0, 0]
-        )
-
-
-        # 'similarity' で降順にソート
-        df_sorted = df.sort_values(by='similarity', ascending=False)
-        
-        # 結果を表示
-        print(df_sorted)
-
-        # 上位5件のaoyama_kougi_idを取得
-        top_ids = df_sorted['aoyama_kougi_id'].head(5).tolist()
-        print(top_ids)
-
-        # プレースホルダの数に合わせてクエリを作成
-        query = "SELECT 科目 FROM aoyama_ssi_kougi WHERE id IN (%s)" % ','.join(['%s'] * len(top_ids))
-        cursor.execute(query, top_ids)
-        subjects = cursor.fetchall()
-
-        for subject in subjects:
-            print(subject.values())
-        
-finally:
-    if connection.open:
-        connection.close()
-
+if __name__ == "__main__":
+    question = str(input())
+    answer = read_db(index_search(question),2)#引数order_numは0～2、２の時は３番目
+    print(answer)
+    print(answer["科目"])
