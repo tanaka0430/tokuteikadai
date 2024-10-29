@@ -29,6 +29,7 @@ def index_search(question):
     return incremented_ids
 
 def read_db(id_list,order_num):
+    connection = create_db_connection()  # 新たに接続を開く
     try:
         with connection.cursor() as cursor:
 
