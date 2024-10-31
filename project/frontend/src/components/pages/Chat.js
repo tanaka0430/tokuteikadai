@@ -1,26 +1,39 @@
+// messages配列の中に、idや科目などを含むオブジェクトが入っていると仮定
 import React, { useState } from 'react';
 import { Header } from '../templates/Header';
 import { TextField, Button, Box, Paper, Typography } from '@mui/material';
+import axios from 'axios';
 
 export const Chat = () => {
   const [userInput, setUserInput] = useState('');
   const [messages, setMessages] = useState([]);
 
   // 送信ボタンクリック時の処理
-  const handleSend = () => {
+  const handleSend = async () => {
     if (userInput.trim() === '') return;
 
-    // メッセージを追加し、入力欄をクリア
-    setMessages([...messages, { text: userInput, sender: 'user' }]);
+    const userMessage = userInput;
+
+    // ユーザーのメッセージを追加
+    setMessages([...messages, { text: userMessage, sender: 'user' }]);
     setUserInput('');
 
-    // 簡単なボットのレスポンス例（実際にはAPI等を使う）
-    setTimeout(() => {
+    try {
+      // FastAPIエンドポイントにPOSTリクエストを送信
+      const response = await axios.post(`http://127.0.0.1:8000/answer/${encodeURIComponent(userMessage)}/0`);
+      console.log("API response:", response.data);  // レスポンスをログに出力
+      
+      const data = response.data.answer; // 応答データの取得
+
+      // APIからの応答をメッセージに追加
       setMessages((prevMessages) => [
         ...prevMessages,
-        { text: 'これは自動応答です', sender: 'bot' },
+        { text: data, sender: 'bot' },
       ]);
-    }, 1000);
+    } catch (error) {
+      console.error("Failed to fetch answer:", error.message);
+      console.error("Error details:", error);
+    }
   };
 
   return (
@@ -70,7 +83,16 @@ export const Chat = () => {
                   backgroundColor: message.sender === 'user' ? '#e0f7fa' : '#f0f0f0',
                 }}
               >
-                <Typography>{message.text}</Typography>
+                {/* オブジェクトの場合は各プロパティを個別に表示 */}
+                {typeof message.text === 'object' ? (
+                  Object.entries(message.text).map(([key, value]) => (
+                    <Typography key={key}>
+                      <strong>{key}:</strong> {value}
+                    </Typography>
+                  ))
+                ) : (
+                  <Typography>{message.text}</Typography>
+                )}
               </Paper>
             </Box>
           ))}
