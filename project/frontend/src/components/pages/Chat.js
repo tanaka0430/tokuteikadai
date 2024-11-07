@@ -1,4 +1,3 @@
-// messages配列の中に、idや科目などを含むオブジェクトが入っていると仮定
 import React, { useState } from 'react';
 import { Header } from '../templates/Header';
 import { TextField, Button, Box, Paper, Typography } from '@mui/material';
@@ -75,7 +74,7 @@ export const Chat = () => {
                 marginBottom: 1,
               }}
             >
-              <Paper 
+              <Paper  
                 sx={{
                   padding: 1, 
                   borderRadius: 2, 
@@ -83,13 +82,9 @@ export const Chat = () => {
                   backgroundColor: message.sender === 'user' ? '#e0f7fa' : '#f0f0f0',
                 }}
               >
-                {/* オブジェクトの場合は各プロパティを個別に表示 */}
                 {typeof message.text === 'object' ? (
-                  Object.entries(message.text).map(([key, value]) => (
-                    <Typography key={key}>
-                      <strong>{key}:</strong> {value}
-                    </Typography>
-                  ))
+                  // 「科目」のみを表示
+                  <Typography>おすすめ科目は「{message.text['科目']}」です。</Typography>
                 ) : (
                   <Typography>{message.text}</Typography>
                 )}
