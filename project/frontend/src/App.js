@@ -6,7 +6,6 @@ import { Login } from './components/pages/Login';
 import { LoginFailed } from './components/pages/LoginFailed';
 import { Register } from './components/pages/Register';
 import { NotFound } from './components/pages/NotFound';
-import { LoginUserProvider } from './components/providers/LoginUserProvider';
 import { RegisterSucceeded } from './components/pages/RegisterSucceeded';
 import { RegisterFailed } from './components/pages/RegisterFailed';
 

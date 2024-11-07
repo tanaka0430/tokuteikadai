@@ -61,6 +61,7 @@ export const Login = () => {
               ログイン
             </Button>
             <Link to="/register">新規登録はこちら</Link>
+            <Link to="/chat">チャット画面へ</Link>
         </Box>
     </Container>
   );
