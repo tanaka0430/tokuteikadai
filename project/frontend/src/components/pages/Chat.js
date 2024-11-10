@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Header } from '../templates/Header';
-import { TextField, Button, Box, Paper, Typography } from '@mui/material';
+import { TextField, Button, Box, Paper, Typography, Link } from '@mui/material';
 import axios from 'axios';
 
 export const Chat = () => {
@@ -22,12 +22,21 @@ export const Chat = () => {
       const response = await axios.post(`http://127.0.0.1:8000/answer/${encodeURIComponent(userMessage)}/0`);
       console.log("API response:", response.data);  // レスポンスをログに出力
       
-      const data = response.data.answer; // 応答データの取得
+      // APIレスポンスから科目とURLを抽出
+      const { 科目, url } = response.data;
+
+      // 科目とURLだけのメッセージを作成
+      const formattedMessage = {
+        subject: 科目 || '科目名なし',
+        url: url || '',
+      };
+      
+      console.log('Formatted Message:', formattedMessage);
 
       // APIからの応答をメッセージに追加
       setMessages((prevMessages) => [
         ...prevMessages,
-        { text: data, sender: 'bot' },
+        { text: formattedMessage, sender: 'bot' },
       ]);
     } catch (error) {
       console.error("Failed to fetch answer:", error.message);
@@ -82,9 +91,13 @@ export const Chat = () => {
                   backgroundColor: message.sender === 'user' ? '#e0f7fa' : '#f0f0f0',
                 }}
               >
-                {typeof message.text === 'object' ? (
-                  // 「科目」のみを表示
-                  <Typography>おすすめ科目は「{message.text['科目']}」です。</Typography>
+                {typeof message.text === 'object' && message.text.subject ? (
+                  <Box>
+                    <Typography variant="body1">{message.text.subject}</Typography>
+                    <Link href={message.text.url} target="_blank" rel="noopener">
+                      シラバスを見る
+                    </Link>
+                  </Box>
                 ) : (
                   <Typography>{message.text}</Typography>
                 )}
