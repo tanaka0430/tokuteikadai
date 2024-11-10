@@ -3,7 +3,6 @@ import os
 from db_config import create_db_connection  # DB接続をインポート
 import numpy as np
 import faiss
-import json
 from dotenv import load_dotenv
 # ec２サーバーで作成した.envファイルを読み込む。.envはgitignoreに追加
 load_dotenv()
@@ -39,9 +38,8 @@ def read_db(id_list,order_num):
             # クエリを実行
             cursor.execute(query, id_list)
             subjects = cursor.fetchall()
-            answer = json.dumps(subjects[order_num], indent=4, ensure_ascii=False)
 
-            return answer
+            return subjects[order_num]
 
     finally:
         if connection.open:
@@ -51,6 +49,5 @@ def read_db(id_list,order_num):
 if __name__ == "__main__":
     question = str(input())
     answer = read_db(index_search(question),2)#引数order_numは0～2、２の時は３番目
-    print(type(answer))
     print(answer)
-    print(json.loads(answer)["科目"])
+    print(answer["科目"])
