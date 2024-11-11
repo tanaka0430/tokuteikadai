@@ -20,7 +20,7 @@ export const Chat = () => {
     try {
       // FastAPIエンドポイントにPOSTリクエストを送信
       const response = await axios.post(`http://127.0.0.1:8000/answer/${encodeURIComponent(userMessage)}/0`);
-      console.log("API response:", response.data);  // レスポンスをログに出力
+      console.log('API response:', response.data);
       
       // APIレスポンスから科目とURLを抽出
       const { 科目, url } = response.data;
@@ -30,10 +30,7 @@ export const Chat = () => {
         subject: 科目 || '科目名なし',
         url: url || '',
       };
-      
-      console.log('Formatted Message:', formattedMessage);
 
-      // APIからの応答をメッセージに追加
       setMessages((prevMessages) => [
         ...prevMessages,
         { text: formattedMessage, sender: 'bot' },
@@ -45,61 +42,66 @@ export const Chat = () => {
   };
 
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh', 
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
       }}
     >
       <Header />
-      <Paper 
-        elevation={3} 
+      <Paper
+        elevation={3}
         sx={{
-          width: '75%', 
+          width: '75%',
           maxWidth: '800px',
-          height: '100%', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          justifyContent: 'space-between', 
-          padding: 2
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: 2,
         }}
       >
-        <Box 
-          sx={{ 
-            flex: 1, 
-            overflowY: 'auto', 
-            marginBottom: 2 
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            marginBottom: 2,
           }}
         >
           {messages.map((message, index) => (
-            <Box 
-              key={index} 
+            <Box
+              key={index}
               sx={{
                 display: 'flex',
                 justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
                 marginBottom: 1,
               }}
             >
-              <Paper  
+              <Paper
                 sx={{
-                  padding: 1, 
-                  borderRadius: 2, 
+                  padding: 1,
+                  borderRadius: 2,
                   maxWidth: '70%',
                   backgroundColor: message.sender === 'user' ? '#e0f7fa' : '#f0f0f0',
                 }}
               >
+                {/* message.text がオブジェクトなら科目とURLを展開 */}
                 {typeof message.text === 'object' && message.text.subject ? (
                   <Box>
-                    <Typography variant="body1">{message.text.subject}</Typography>
-                    <Link href={message.text.url} target="_blank" rel="noopener">
-                      シラバスを見る
-                    </Link>
+                    <Typography variant="body1">
+                      <strong>{message.text.subject}</strong>
+                    </Typography>
+                    {message.text.url && (
+                      <Link href={message.text.url} target="_blank" rel="noopener">
+                        シラバスを見る
+                      </Link>
+                    )}
                   </Box>
                 ) : (
-                  <Typography>{message.text}</Typography>
+                <Typography>{message.text}</Typography>
                 )}
               </Paper>
             </Box>
@@ -115,11 +117,7 @@ export const Chat = () => {
             placeholder="メッセージを入力..."
             sx={{ marginRight: 1 }}
           />
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={handleSend}
-          >
+          <Button variant="contained" color="primary" onClick={handleSend}>
             送信
           </Button>
         </Box>

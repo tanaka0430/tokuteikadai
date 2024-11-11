@@ -8,10 +8,11 @@ import { Register } from './components/pages/Register';
 import { NotFound } from './components/pages/NotFound';
 import { RegisterSucceeded } from './components/pages/RegisterSucceeded';
 import { RegisterFailed } from './components/pages/RegisterFailed';
+import { LoginUserProvider } from './components/providers/LoginUserProvider';
 
 function App() {
   return (
-    <>
+    <LoginUserProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -24,7 +25,7 @@ function App() {
           <Route path="*" element={<NotFound/>} />
         </Routes>
       </BrowserRouter>
-    </>
+    </LoginUserProvider>
   );
 }
 

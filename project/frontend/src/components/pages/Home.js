@@ -1,15 +1,22 @@
-import React, { useContext } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import React, { useContext } from 'react';
+import { Navigate } from 'react-router-dom';
 import { LoginUserContext } from '../providers/LoginUserProvider';
+import { Header } from '../templates/Header';
+import { Link } from 'react-router-dom';
 
 export const Home = () => {
-  const { isLogined } = useContext(LoginUserContext);
+  const { isLogined, loginUser } = useContext(LoginUserContext);
 
-  if(!isLogined){
+  if (!isLogined) {
     return <Navigate to="/login" />;
-  }else{
-  return (
-    <Link to ='/chat'>チャット画面へ</Link>
-    );
   }
+
+  return (
+    <div>
+      <Header />
+      <h2>ホーム画面</h2>
+      <p>ようこそ、{loginUser}さん！</p>
+      <Link to="/chat">チャット画面へ</Link>
+    </div>
+  );
 };

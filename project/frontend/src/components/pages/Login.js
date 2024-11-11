@@ -16,7 +16,8 @@ export const Login = () => {
     };
 
     const onClickLogin = ()=>{
-        login(user);
+      console.log('ログインボタンがクリックされました', user);
+      login(user);
     };
 
   return (
@@ -61,7 +62,6 @@ export const Login = () => {
               ログイン
             </Button>
             <Link to="/register">新規登録はこちら</Link>
-            <Link to="/chat">チャット画面へ</Link>
         </Box>
     </Container>
   );
