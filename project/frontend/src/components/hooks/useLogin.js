@@ -16,7 +16,7 @@ export const useLogin = () => {
                 console.log("ログイン成功");
                 setLoginUser(user.username);
                 setIsLogined(true);
-                navigate("/", { state: { username:"ABC" } });
+                navigate("/"); //ログイン後に遷移するページ
             }else{
                 console.log("ログイン失敗");
                 navigate("/loginfailed");
