@@ -1,18 +1,28 @@
 from openai import OpenAI
 import os
-from db_config import create_db_connection  # DB接続をインポート
 import numpy as np
 import faiss
-import json
 from dotenv import load_dotenv
+from database import SessionLocal
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+
 # ec２サーバーで作成した.envファイルを読み込む。.envはgitignoreに追加
 load_dotenv()
 
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # OpenAIクライアントのインスタンスを作成
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 index = faiss.read_index("faiss_index.bin")
-connection = create_db_connection()
+
 
 
 def get_embedding(text):
@@ -29,28 +39,23 @@ def index_search(question):
     incremented_ids = [id + 1 for sublist in I for id in sublist]  # 一次元リストにフラット化しつつ加算
     return incremented_ids
 
-def read_db(id_list,order_num):
-    connection = create_db_connection()  # 新たに接続を開く
-    try:
-        with connection.cursor() as cursor:
+def read_db(db:Session,id_list,order_num):
+    # プレースホルダを一つにして、SQLAlchemyにリスト全体を渡す
+    query = text("SELECT * FROM aoyama_kougi WHERE id IN :id_list")
+    
+    # パラメータの辞書
+    params = {"id_list": tuple(id_list)}  # リストをタプルに変換して渡す
+    
+    # クエリを実行
+    result = db.execute(query, params).mappings().all()
 
-            # プレースホルダの数に合わせてクエリを作成
-            query = "SELECT * FROM aoyama_kougi WHERE id IN (%s)" % ','.join(['%s'] * len(id_list))
-            # クエリを実行
-            cursor.execute(query, id_list)
-            subjects = cursor.fetchall()
-            answer = json.dumps(subjects[order_num], indent=4, ensure_ascii=False)
+    return result[order_num]
 
-            return answer
-
-    finally:
-        if connection.open:
-            connection.close()
 
 
 if __name__ == "__main__":
+    db = next(get_db()) 
     question = str(input())
-    answer = read_db(index_search(question),2)#引数order_numは0～2、２の時は３番目
-    print(type(answer))
+    answer = read_db(db,index_search(question),2)#引数order_numは0～2、２の時は３番目
     print(answer)
-    print(json.loads(answer)["科目"])
+    print(answer["科目"])

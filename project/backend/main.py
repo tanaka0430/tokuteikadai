@@ -1,8 +1,17 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_
 from fastapi.middleware.cors import CORSMiddleware
 from openai_search import index_search, read_db
+from crud import get_user_by_name, get_user_by_name_by_password, create_user
+from models import User,aoyama_kougi
+from schemas import User, UserCreate
+from database import SessionLocal, engine, Base
+from db_config import create_db_connection  # DB接続をインポート
 from pydantic import BaseModel
-from db_config import create_db_connection
+
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -15,10 +24,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.post("/users/", response_model=User)
+def create_user_endpoint(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = get_user_by_name(db, name=user.name)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Name already registered")
+    
+    return create_user(db=db, user=user)
+
+@app.get("/users/", response_model=User)
+def read_user(name: str, password: str, db: Session = Depends(get_db)):
+    db_user = get_user_by_name_by_password(db, name=name, password=password)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
 @app.post("/answer/{text}/{order_num}")
-async def get_answer(text:str,order_num:int):
+async def get_answer(text: str, order_num: int, db: Session = Depends(get_db)):
     answer = index_search(text)
-    return read_db(answer,order_num)
+    return read_db(db, answer, order_num)
 
 
 # 学部リストと学期リスト
@@ -43,52 +75,53 @@ class SearchRequest(BaseModel):
     dayPeriodCombinations: list[str] = []
     department: str = "指定なし"
     semester: str = "指定なし"
-
+    courseName: str = None  # デフォルト値Noneで講義名を追加
+    instructorName: str = None  # デフォルト値Noneで教員名を追加
 
 # シラバス検索
 @app.post("/search")
-async def search_courses(request: SearchRequest):
+async def search_courses(
+    request: SearchRequest, 
+    db: Session = Depends(get_db)
+):
     campuses = request.campuses
     day_period_combinations = request.dayPeriodCombinations
     department = request.department
     semester = request.semester
+    course_name = request.courseName
+    instructor_name = request.instructorName
 
-    query = "SELECT * FROM aoyama_kougi WHERE 1=1"
-    params = []
+    # ベースクエリ
+    query = db.query(aoyama_kougi)
 
     # キャンパス条件
     if campuses:
-        # 青山または相模原が選ばれていれば、部分一致で検索
-        campus_condition = " AND ("
-        campus_condition += " OR ".join([f"時限 LIKE %s" for _ in campuses])
-        campus_condition += ")"
-        query += campus_condition
-        params.extend([f"%{campus}%" for campus in campuses])
+        campus_conditions = [aoyama_kougi.時限.like(f"%{campus}%") for campus in campuses]
+        query = query.filter(or_(*campus_conditions))
 
     # 曜日と時限の条件
     if day_period_combinations:
-        query += " AND ("
-        query += " OR ".join([f"時限 LIKE %s" for _ in day_period_combinations])
-        query += ")"
-        params.extend([f"%{combo}%" for combo in day_period_combinations])
+        day_period_conditions = [aoyama_kougi.時限.like(f"%{combo}%") for combo in day_period_combinations]
+        query = query.filter(or_(*day_period_conditions))
 
     # 学部条件
     if department and department != "指定なし":
-        query += " AND 開講 = %s"
-        params.append(department)
+        query = query.filter(aoyama_kougi.開講 == department)
 
     # 学期条件
     if semester and semester != "指定なし":
-        query += " AND 時限 LIKE %s"
-        params.append(f"%{semester}%")
+        query = query.filter(aoyama_kougi.時限.like(f"%{semester}%"))
+
+    # 講義名条件
+    if course_name:
+        query = query.filter(aoyama_kougi.科目.like(f"%{course_name}%"))
+
+    # 教員名条件
+    if instructor_name:
+        query = query.filter(aoyama_kougi.教員.like(f"%{instructor_name}%"))
 
     # クエリ実行
-    connection = create_db_connection()
-    cursor = connection.cursor()
-    cursor.execute(query, tuple(params))
-    results = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    results = query.all()
 
     return {"results": results}
 

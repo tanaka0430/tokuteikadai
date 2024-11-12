@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>シラバス検索</title>
     <style>
-        .checkbox-group, .dropdown-group {
+        .checkbox-group, .dropdown-group, .input-group {
             margin-bottom: 10px;
         }
     </style>
@@ -49,6 +49,18 @@
         <select name="semester" id="semester"></select>
     </div>
 
+    <!-- 講義名の入力フィールド -->
+    <div class="input-group">
+        <label for="courseName">講義名:</label>
+        <input type="text" id="courseName" name="courseName">
+    </div>
+
+    <!-- 教員名の入力フィールド -->
+    <div class="input-group">
+        <label for="instructorName">教員名:</label>
+        <input type="text" id="instructorName" name="instructorName">
+    </div>
+
     <button onclick="search()">検索</button>
 
     <h2>検索結果</h2>
@@ -89,6 +101,8 @@
             const periodCheckboxes = document.querySelectorAll('input[name="period"]:checked');
             const department = document.getElementById('department').value;
             const semester = document.getElementById('semester').value;
+            const courseName = document.getElementById('courseName').value;
+            const instructorName = document.getElementById('instructorName').value;
 
             const campuses = Array.from(campusCheckboxes).map(cb => cb.value);
             const days = Array.from(dayCheckboxes).map(cb => cb.value);
@@ -98,7 +112,9 @@
                 campuses: campuses,
                 dayPeriodCombinations: combineDaysAndPeriods(days, periods),
                 department: department,
-                semester: semester
+                semester: semester,
+                courseName: courseName,
+                instructorName: instructorName
             };
 
             fetch('http://127.0.0.1:8000/search', {
@@ -114,13 +130,38 @@
 
         function combineDaysAndPeriods(days, periods) {
             const combinations = [];
-            days.forEach(day => {
-                periods.forEach(period => {
-                    combinations.push(`${day}${period}`);
+
+            // "不定"がdaysに含まれている場合
+            if (days.includes("不定")) {
+                combinations.push("不定");
+                days = days.filter(day => day !== "不定"); // "不定"以外を残す
+            }
+
+            // "不定"がperiodsに含まれている場合
+            if (periods.includes("不定")) {
+                combinations.push("不定");
+                periods = periods.filter(period => period !== "不定"); // "不定"以外を残す
+            }
+
+            // days と periods が両方とも空でない場合、曜日と期間の組み合わせを作成
+            if (days.length > 0 && periods.length > 0) {
+                days.forEach(day => {
+                    periods.forEach(period => {
+                        combinations.push(`${day}${period}`);
+                    });
                 });
-            });
+            } else {
+                // daysかperiodsが空の場合、残りの選択肢をそのまま返す
+                if (days.length > 0) {
+                    combinations.push(...days);
+                }
+                if (periods.length > 0) {
+                    combinations.push(...periods);
+                }
+            }
+
             return combinations;
-        }
+}
 
         function displayResults(results) {
             const resultsDiv = document.getElementById('results');
