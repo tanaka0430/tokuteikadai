@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シラバス検索</title>
+    <style>
+        .checkbox-group, .dropdown-group {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>シラバス検索</h1>
+
+    <div class="checkbox-group">
+        <label><input type="checkbox" name="campus" value="青山"> 青山</label>
+        <label><input type="checkbox" name="campus" value="相模原"> 相模原</label>
+    </div>
+
+    <div class="checkbox-group">
+        <label><input type="checkbox" name="day" value="月"> 月</label>
+        <label><input type="checkbox" name="day" value="火"> 火</label>
+        <label><input type="checkbox" name="day" value="水"> 水</label>
+        <label><input type="checkbox" name="day" value="木"> 木</label>
+        <label><input type="checkbox" name="day" value="金"> 金</label>
+        <label><input type="checkbox" name="day" value="土"> 土</label>
+        <label><input type="checkbox" name="day" value="不定"> 不定</label>
+    </div>
+
+    <div class="checkbox-group">
+        <label><input type="checkbox" name="period" value="1"> 1</label>
+        <label><input type="checkbox" name="period" value="2"> 2</label>
+        <label><input type="checkbox" name="period" value="3"> 3</label>
+        <label><input type="checkbox" name="period" value="4"> 4</label>
+        <label><input type="checkbox" name="period" value="5"> 5</label>
+        <label><input type="checkbox" name="period" value="6"> 6</label>
+        <label><input type="checkbox" name="period" value="7"> 7</label>
+        <label><input type="checkbox" name="period" value="不定"> 不定</label>
+    </div>
+
+    <div class="dropdown-group">
+        <label for="department">学部:</label>
+        <select name="department" id="department"></select>
+    </div>
+
+    <div class="dropdown-group">
+        <label for="semester">学期:</label>
+        <select name="semester" id="semester"></select>
+    </div>
+
+    <button onclick="search()">検索</button>
+
+    <h2>検索結果</h2>
+    <div id="results"></div>
+
+    <script>
+        window.onload = function() {
+            // 学部リストを取得
+            fetch('http://127.0.0.1:8000/departments')
+                .then(response => response.json())
+                .then(data => {
+                    const departmentSelect = document.getElementById('department');
+                    data.departments.forEach(department => {
+                        const option = document.createElement('option');
+                        option.value = department;
+                        option.text = department;
+                        departmentSelect.appendChild(option);
+                    });
+                });
+
+            // 学期リストを取得
+            fetch('http://127.0.0.1:8000/semesters')
+                .then(response => response.json())
+                .then(data => {
+                    const semesterSelect = document.getElementById('semester');
+                    data.semesters.forEach(semester => {
+                        const option = document.createElement('option');
+                        option.value = semester;
+                        option.text = semester;
+                        semesterSelect.appendChild(option);
+                    });
+                });
+        };
+
+        function search() {
+            const campusCheckboxes = document.querySelectorAll('input[name="campus"]:checked');
+            const dayCheckboxes = document.querySelectorAll('input[name="day"]:checked');
+            const periodCheckboxes = document.querySelectorAll('input[name="period"]:checked');
+            const department = document.getElementById('department').value;
+            const semester = document.getElementById('semester').value;
+
+            const campuses = Array.from(campusCheckboxes).map(cb => cb.value);
+            const days = Array.from(dayCheckboxes).map(cb => cb.value);
+            const periods = Array.from(periodCheckboxes).map(cb => cb.value);
+
+            const requestBody = {
+                campuses: campuses,
+                dayPeriodCombinations: combineDaysAndPeriods(days, periods),
+                department: department,
+                semester: semester
+            };
+
+            fetch('http://127.0.0.1:8000/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => response.json())
+            .then(data => displayResults(data.results));
+        }
+
+        function combineDaysAndPeriods(days, periods) {
+            const combinations = [];
+            days.forEach(day => {
+                periods.forEach(period => {
+                    combinations.push(`${day}${period}`);
+                });
+            });
+            return combinations;
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            results.forEach(result => {
+                const div = document.createElement('div');
+                div.textContent = JSON.stringify(result);
+                resultsDiv.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
