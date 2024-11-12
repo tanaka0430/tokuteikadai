@@ -73,7 +73,7 @@ SEMESTERS = [
 class SearchRequest(BaseModel):
     campuses: list[str] = []
     dayPeriodCombinations: list[str] = []
-    department: str = "指定なし"
+    departments: list[str] = []
     semester: str = "指定なし"
     courseName: str = None  # デフォルト値Noneで講義名を追加
     instructorName: str = None  # デフォルト値Noneで教員名を追加
@@ -86,7 +86,7 @@ async def search_courses(
 ):
     campuses = request.campuses
     day_period_combinations = request.dayPeriodCombinations
-    department = request.department
+    departments = request.departments  # 複数の学部を取得
     semester = request.semester
     course_name = request.courseName
     instructor_name = request.instructorName
@@ -105,8 +105,9 @@ async def search_courses(
         query = query.filter(or_(*day_period_conditions))
 
     # 学部条件
-    if department and department != "指定なし":
-        query = query.filter(aoyama_kougi.開講 == department)
+    if departments and departments != ["指定なし"]:
+        department_conditions = [aoyama_kougi.開講 == department for department in departments]
+        query = query.filter(or_(*department_conditions))
 
     # 学期条件
     if semester and semester != "指定なし":

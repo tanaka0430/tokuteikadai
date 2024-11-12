@@ -39,9 +39,13 @@
         <label><input type="checkbox" name="period" value="不定"> 不定</label>
     </div>
 
+    <!-- 学部選択フィールドと「学部を追加」ボタン -->
     <div class="dropdown-group">
-        <label for="department">学部:</label>
-        <select name="department" id="department"></select>
+        <label>学部:</label>
+        <div id="departmentsContainer">
+            <!-- ここに学部の選択フィールドが追加されます -->
+        </div>
+        <button type="button" onclick="addDepartmentField()">学部を追加</button>
     </div>
 
     <div class="dropdown-group">
@@ -67,18 +71,18 @@
     <div id="results"></div>
 
     <script>
+        // 学部リストを初期化
+        let departmentsList = [];
+
+        // ページ読み込み時に学部と学期リストを取得
         window.onload = function() {
             // 学部リストを取得
             fetch('http://127.0.0.1:8000/departments')
                 .then(response => response.json())
                 .then(data => {
-                    const departmentSelect = document.getElementById('department');
-                    data.departments.forEach(department => {
-                        const option = document.createElement('option');
-                        option.value = department;
-                        option.text = department;
-                        departmentSelect.appendChild(option);
-                    });
+                    departmentsList = data.departments;
+                    // 初回の学部選択フィールドを追加
+                    addDepartmentField();
                 });
 
             // 学期リストを取得
@@ -95,11 +99,28 @@
                 });
         };
 
+        // 学部選択フィールドを追加する関数
+        function addDepartmentField() {
+            const departmentsContainer = document.getElementById('departmentsContainer');
+            const select = document.createElement('select');
+            select.name = 'department';
+            
+            departmentsList.forEach(department => {
+                const option = document.createElement('option');
+                option.value = department;
+                option.text = department;
+                select.appendChild(option);
+            });
+
+            departmentsContainer.appendChild(select);
+            departmentsContainer.appendChild(document.createElement('br')); // 改行を追加
+        }
+
         function search() {
             const campusCheckboxes = document.querySelectorAll('input[name="campus"]:checked');
             const dayCheckboxes = document.querySelectorAll('input[name="day"]:checked');
             const periodCheckboxes = document.querySelectorAll('input[name="period"]:checked');
-            const department = document.getElementById('department').value;
+            const departmentSelects = document.querySelectorAll('select[name="department"]');
             const semester = document.getElementById('semester').value;
             const courseName = document.getElementById('courseName').value;
             const instructorName = document.getElementById('instructorName').value;
@@ -108,10 +129,13 @@
             const days = Array.from(dayCheckboxes).map(cb => cb.value);
             const periods = Array.from(periodCheckboxes).map(cb => cb.value);
 
+            // 学部を配列として取得
+            const departments = Array.from(departmentSelects).map(select => select.value);
+
             const requestBody = {
                 campuses: campuses,
                 dayPeriodCombinations: combineDaysAndPeriods(days, periods),
-                department: department,
+                departments: departments,
                 semester: semester,
                 courseName: courseName,
                 instructorName: instructorName
@@ -131,19 +155,16 @@
         function combineDaysAndPeriods(days, periods) {
             const combinations = [];
 
-            // "不定"がdaysに含まれている場合
             if (days.includes("不定")) {
                 combinations.push("不定");
-                days = days.filter(day => day !== "不定"); // "不定"以外を残す
+                days = days.filter(day => day !== "不定");
             }
 
-            // "不定"がperiodsに含まれている場合
             if (periods.includes("不定")) {
                 combinations.push("不定");
-                periods = periods.filter(period => period !== "不定"); // "不定"以外を残す
+                periods = periods.filter(period => period !== "不定");
             }
 
-            // days と periods が両方とも空でない場合、曜日と期間の組み合わせを作成
             if (days.length > 0 && periods.length > 0) {
                 days.forEach(day => {
                     periods.forEach(period => {
@@ -151,17 +172,12 @@
                     });
                 });
             } else {
-                // daysかperiodsが空の場合、残りの選択肢をそのまま返す
-                if (days.length > 0) {
-                    combinations.push(...days);
-                }
-                if (periods.length > 0) {
-                    combinations.push(...periods);
-                }
+                if (days.length > 0) combinations.push(...days);
+                if (periods.length > 0) combinations.push(...periods);
             }
 
             return combinations;
-}
+        }
 
         function displayResults(results) {
             const resultsDiv = document.getElementById('results');
