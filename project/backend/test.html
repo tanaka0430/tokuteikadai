@@ -35,7 +35,6 @@
         <label><input type="checkbox" name="period" value="4"> 4</label>
         <label><input type="checkbox" name="period" value="5"> 5</label>
         <label><input type="checkbox" name="period" value="6"> 6</label>
-        <label><input type="checkbox" name="period" value="7"> 7</label>
         <label><input type="checkbox" name="period" value="不定"> 不定</label>
     </div>
 
@@ -128,8 +127,6 @@
             const campuses = Array.from(campusCheckboxes).map(cb => cb.value);
             const days = Array.from(dayCheckboxes).map(cb => cb.value);
             const periods = Array.from(periodCheckboxes).map(cb => cb.value);
-
-            // 学部を配列として取得
             const departments = Array.from(departmentSelects).map(select => select.value);
 
             const requestBody = {

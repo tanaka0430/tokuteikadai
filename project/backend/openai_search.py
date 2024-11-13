@@ -5,12 +5,15 @@ import faiss
 from dotenv import load_dotenv
 from database import SessionLocal
 from sqlalchemy.orm import Session
-from sqlalchemy import text
-
+from sqlalchemy import select
+from models import aoyama_kougi
+from schemas import AoyamaKougiBase
+from crud import read_db
+from database import SessionLocal, engine, Base
 
 # ec２サーバーで作成した.envファイルを読み込む。.envはgitignoreに追加
 load_dotenv()
-
+Base.metadata.create_all(bind=engine)
 # Dependency
 def get_db():
     db = SessionLocal()
@@ -33,29 +36,49 @@ def get_embedding(text):
     # 埋め込みベクトルを取得
     return  np.array([response.data[0].embedding]).astype("float32")
 
+#絞り込みの確認用
+def get_shakai_joho_id(session: Session):
+    result = session.execute(
+        select(aoyama_kougi.id).where(aoyama_kougi.開講 == "社会情報学部")
+    ).scalars().all()
+
+    return result
+
+#絞り込み対応
+def subset_search_batch(id_list, question):
+    # id_list のすべての値を 1 減算
+    id_list = [id - 1 for id in id_list]
+    sel = faiss.IDSelectorBatch(id_list)
+    params = faiss.SearchParametersIVF(sel=sel)
+    D,I = index.search(
+        get_embedding(question), k=9, params=params
+    )
+    # Iの各値に1を加算
+    incremented_ids = [id + 1 for sublist in I for id in sublist]  # 一次元リストにフラット化しつつ加算
+    return incremented_ids
+
+#絞り込み未対応
 def index_search(question):
     D,I = index.search(get_embedding(question), 3)#3件取得
     # Iの各値に1を加算
     incremented_ids = [id + 1 for sublist in I for id in sublist]  # 一次元リストにフラット化しつつ加算
     return incremented_ids
 
-def read_db(db:Session,id_list,order_num):
-    # プレースホルダを一つにして、SQLAlchemyにリスト全体を渡す
-    query = text("SELECT * FROM aoyama_kougi WHERE id IN :id_list")
-    
-    # パラメータの辞書
-    params = {"id_list": tuple(id_list)}  # リストをタプルに変換して渡す
-    
-    # クエリを実行
-    result = db.execute(query, params).mappings().all()
 
-    return result[order_num]
 
 
 
 if __name__ == "__main__":
     db = next(get_db()) 
     question = str(input())
-    answer = read_db(db,index_search(question),2)#引数order_numは0～2、２の時は３番目
-    print(answer)
-    print(answer["科目"])
+    
+    result = read_db(db,index_search(question))[0]#引数order_numは0～2、２の時は３番目
+    shajo_result = read_db(db,subset_search_batch(get_shakai_joho_id(db),question))[0]
+    
+    result = AoyamaKougiBase.model_validate(result)
+    shajo_result = AoyamaKougiBase.model_validate(shajo_result)
+    print(result) 
+    print(shajo_result)
+
+    print(result.科目)
+    print(shajo_result.科目)
