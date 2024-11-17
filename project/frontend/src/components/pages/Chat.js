@@ -85,6 +85,7 @@ export const Chat = () => {
                 marginBottom: 1,
               }}
             >
+
               <Paper
                 sx={{
                   padding: 1,
@@ -110,6 +111,7 @@ export const Chat = () => {
                 ) : (
                 <Typography>{message.text}</Typography>
                 )}
+
               </Paper>
             </Box>
           ))}
