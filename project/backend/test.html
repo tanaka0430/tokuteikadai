@@ -38,27 +38,27 @@
         <label><input type="checkbox" name="period" value="不定"> 不定</label>
     </div>
 
-    <!-- 学部選択フィールドと「学部を追加」ボタン -->
     <div class="dropdown-group">
         <label>学部:</label>
         <div id="departmentsContainer">
-            <!-- ここに学部の選択フィールドが追加されます -->
+            <!-- 学部選択フィールド -->
         </div>
         <button type="button" onclick="addDepartmentField()">学部を追加</button>
     </div>
 
     <div class="dropdown-group">
-        <label for="semester">学期:</label>
-        <select name="semester" id="semester"></select>
+        <label>学期:</label>
+        <div id="semestersContainer">
+            <!-- 学期選択フィールド -->
+        </div>
+        <button type="button" onclick="addSemesterField()">学期を追加</button>
     </div>
 
-    <!-- 講義名の入力フィールド -->
     <div class="input-group">
         <label for="courseName">講義名:</label>
         <input type="text" id="courseName" name="courseName">
     </div>
 
-    <!-- 教員名の入力フィールド -->
     <div class="input-group">
         <label for="instructorName">教員名:</label>
         <input type="text" id="instructorName" name="instructorName">
@@ -70,40 +70,30 @@
     <div id="results"></div>
 
     <script>
-        // 学部リストを初期化
         let departmentsList = [];
+        let semestersList = [];
 
-        // ページ読み込み時に学部と学期リストを取得
         window.onload = function() {
-            // 学部リストを取得
             fetch('http://127.0.0.1:8000/departments')
                 .then(response => response.json())
                 .then(data => {
                     departmentsList = data.departments;
-                    // 初回の学部選択フィールドを追加
                     addDepartmentField();
                 });
 
-            // 学期リストを取得
             fetch('http://127.0.0.1:8000/semesters')
                 .then(response => response.json())
                 .then(data => {
-                    const semesterSelect = document.getElementById('semester');
-                    data.semesters.forEach(semester => {
-                        const option = document.createElement('option');
-                        option.value = semester;
-                        option.text = semester;
-                        semesterSelect.appendChild(option);
-                    });
+                    semestersList = data.semesters;
+                    addSemesterField();
                 });
         };
 
-        // 学部選択フィールドを追加する関数
         function addDepartmentField() {
-            const departmentsContainer = document.getElementById('departmentsContainer');
+            const container = document.getElementById('departmentsContainer');
             const select = document.createElement('select');
             select.name = 'department';
-            
+
             departmentsList.forEach(department => {
                 const option = document.createElement('option');
                 option.value = department;
@@ -111,8 +101,24 @@
                 select.appendChild(option);
             });
 
-            departmentsContainer.appendChild(select);
-            departmentsContainer.appendChild(document.createElement('br')); // 改行を追加
+            container.appendChild(select);
+            container.appendChild(document.createElement('br'));
+        }
+
+        function addSemesterField() {
+            const container = document.getElementById('semestersContainer');
+            const select = document.createElement('select');
+            select.name = 'semester';
+
+            semestersList.forEach(semester => {
+                const option = document.createElement('option');
+                option.value = semester;
+                option.text = semester;
+                select.appendChild(option);
+            });
+
+            container.appendChild(select);
+            container.appendChild(document.createElement('br'));
         }
 
         function search() {
@@ -120,7 +126,7 @@
             const dayCheckboxes = document.querySelectorAll('input[name="day"]:checked');
             const periodCheckboxes = document.querySelectorAll('input[name="period"]:checked');
             const departmentSelects = document.querySelectorAll('select[name="department"]');
-            const semester = document.getElementById('semester').value;
+            const semesterSelects = document.querySelectorAll('select[name="semester"]');
             const courseName = document.getElementById('courseName').value;
             const instructorName = document.getElementById('instructorName').value;
 
@@ -128,12 +134,13 @@
             const days = Array.from(dayCheckboxes).map(cb => cb.value);
             const periods = Array.from(periodCheckboxes).map(cb => cb.value);
             const departments = Array.from(departmentSelects).map(select => select.value);
+            const semesters = Array.from(semesterSelects).map(select => select.value);
 
             const requestBody = {
                 campuses: campuses,
                 dayPeriodCombinations: combineDaysAndPeriods(days, periods),
                 departments: departments,
-                semester: semester,
+                semesters: semesters,
                 courseName: courseName,
                 instructorName: instructorName
             };
