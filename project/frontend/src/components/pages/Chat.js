@@ -19,17 +19,22 @@ export const Chat = () => {
 
     try {
       // FastAPIエンドポイントにPOSTリクエストを送信
-      const response = await axios.post(`http://127.0.0.1:8000/answer/${encodeURIComponent(userMessage)}/0`);
+      const response = await axios.post(
+        `http://localhost:8000/answer/${encodeURIComponent(userMessage)}`,
+        {query: userMessage, filters: {}},
+        {headers: {'Content-Type': 'application/json'}},
+      );
       console.log('API response:', response.data);
-      
-      // APIレスポンスから科目とURLを抽出
-      const { 科目, url } = response.data;
 
-      // 科目とURLだけのメッセージを作成
-      const formattedMessage = {
-        subject: 科目 || '科目名なし',
-        url: url || '',
-      };
+      // 講義情報の配列を取得し、最初の3件のみ抽出
+      const results = response.data.results?.slice(0, 3) || [];
+
+     // 取得した講義情報をメッセージに変換
+     const formattedMessage = results.map((item) => ({
+      subject: item.科目 || '科目名なし',
+      url: item.url || '',
+      schedule: item.時限 || '時限不明',
+    }));
 
       setMessages((prevMessages) => [
         ...prevMessages,
@@ -80,6 +85,7 @@ export const Chat = () => {
                 marginBottom: 1,
               }}
             >
+
               <Paper
                 sx={{
                   padding: 1,
@@ -88,21 +94,24 @@ export const Chat = () => {
                   backgroundColor: message.sender === 'user' ? '#e0f7fa' : '#f0f0f0',
                 }}
               >
-                {/* message.text がオブジェクトなら科目とURLを展開 */}
-                {typeof message.text === 'object' && message.text.subject ? (
-                  <Box>
-                    <Typography variant="body1">
-                      <strong>{message.text.subject}</strong>
-                    </Typography>
-                    {message.text.url && (
-                      <Link href={message.text.url} target="_blank" rel="noopener">
-                        シラバスを見る
-                      </Link>
-                    )}
+                {Array.isArray(message.text) ? (
+                  message.text.map((item, idx) => (
+                    <Box key={idx} sx={{ marginBottom: 1 }}>
+                      <Typography variant="body1">
+                        <strong>{item.subject}</strong>
+                      </Typography>
+                      <Typography variant="body2">{item.schedule}</Typography>
+                      {item.url && (
+                        <Link href={item.url} target="_blank" rel="noopener">
+                          シラバスを見る
+                        </Link>
+                      )}
                   </Box>
+                  ))
                 ) : (
                 <Typography>{message.text}</Typography>
                 )}
+
               </Paper>
             </Box>
           ))}
