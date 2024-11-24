@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シラバス検索</title>
+    <style>
+        .checkbox-group, .dropdown-group, .input-group {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>シラバス検索</h1>
+
+    <div class="checkbox-group">
+        <label><input type="checkbox" name="campus" value="青山"> 青山</label>
+        <label><input type="checkbox" name="campus" value="相模原"> 相模原</label>
+    </div>
+
+    <div class="checkbox-group">
+        <label><input type="checkbox" name="day" value="月"> 月</label>
+        <label><input type="checkbox" name="day" value="火"> 火</label>
+        <label><input type="checkbox" name="day" value="水"> 水</label>
+        <label><input type="checkbox" name="day" value="木"> 木</label>
+        <label><input type="checkbox" name="day" value="金"> 金</label>
+        <label><input type="checkbox" name="day" value="土"> 土</label>
+        <label><input type="checkbox" name="day" value="不定"> 不定</label>
+    </div>
+
+    <div class="checkbox-group">
+        <label><input type="checkbox" name="period" value="1"> 1</label>
+        <label><input type="checkbox" name="period" value="2"> 2</label>
+        <label><input type="checkbox" name="period" value="3"> 3</label>
+        <label><input type="checkbox" name="period" value="4"> 4</label>
+        <label><input type="checkbox" name="period" value="5"> 5</label>
+        <label><input type="checkbox" name="period" value="6"> 6</label>
+        <label><input type="checkbox" name="period" value="不定"> 不定</label>
+    </div>
+
+    <div class="dropdown-group">
+        <label>学部:</label>
+        <div id="departmentsContainer">
+            <!-- 学部選択フィールド -->
+        </div>
+        <button type="button" onclick="addDepartmentField()">学部を追加</button>
+    </div>
+
+    <div class="dropdown-group">
+        <label>学期:</label>
+        <div id="semestersContainer">
+            <!-- 学期選択フィールド -->
+        </div>
+        <button type="button" onclick="addSemesterField()">学期を追加</button>
+    </div>
+
+    <div class="input-group">
+        <label for="courseName">講義名:</label>
+        <input type="text" id="courseName" name="courseName">
+    </div>
+
+    <div class="input-group">
+        <label for="instructorName">教員名:</label>
+        <input type="text" id="instructorName" name="instructorName">
+    </div>
+
+    <button onclick="search()">検索</button>
+
+    <h2>検索結果</h2>
+    <div id="results"></div>
+
+    <script>
+        let departmentsList = [];
+        let semestersList = [];
+
+        window.onload = function() {
+            fetch('http://127.0.0.1:8000/departments')
+                .then(response => response.json())
+                .then(data => {
+                    departmentsList = data.departments;
+                    addDepartmentField();
+                });
+
+            fetch('http://127.0.0.1:8000/semesters')
+                .then(response => response.json())
+                .then(data => {
+                    semestersList = data.semesters;
+                    addSemesterField();
+                });
+        };
+
+        function addDepartmentField() {
+            const container = document.getElementById('departmentsContainer');
+            const select = document.createElement('select');
+            select.name = 'department';
+
+            departmentsList.forEach(department => {
+                const option = document.createElement('option');
+                option.value = department;
+                option.text = department;
+                select.appendChild(option);
+            });
+
+            container.appendChild(select);
+            container.appendChild(document.createElement('br'));
+        }
+
+        function addSemesterField() {
+            const container = document.getElementById('semestersContainer');
+            const select = document.createElement('select');
+            select.name = 'semester';
+
+            semestersList.forEach(semester => {
+                const option = document.createElement('option');
+                option.value = semester;
+                option.text = semester;
+                select.appendChild(option);
+            });
+
+            container.appendChild(select);
+            container.appendChild(document.createElement('br'));
+        }
+
+        function search() {
+            const campusCheckboxes = document.querySelectorAll('input[name="campus"]:checked');
+            const dayCheckboxes = document.querySelectorAll('input[name="day"]:checked');
+            const periodCheckboxes = document.querySelectorAll('input[name="period"]:checked');
+            const departmentSelects = document.querySelectorAll('select[name="department"]');
+            const semesterSelects = document.querySelectorAll('select[name="semester"]');
+            const courseName = document.getElementById('courseName').value;
+            const instructorName = document.getElementById('instructorName').value;
+
+            const campuses = Array.from(campusCheckboxes).map(cb => cb.value);
+            const days = Array.from(dayCheckboxes).map(cb => cb.value);
+            const periods = Array.from(periodCheckboxes).map(cb => cb.value);
+            const departments = Array.from(departmentSelects).map(select => select.value);
+            const semesters = Array.from(semesterSelects).map(select => select.value);
+
+            const requestBody = {
+                campuses: campuses,
+                dayPeriodCombinations: combineDaysAndPeriods(days, periods),
+                departments: departments,
+                semesters: semesters,
+                courseName: courseName,
+                instructorName: instructorName
+            };
+
+            fetch('http://127.0.0.1:8000/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => response.json())
+            .then(data => displayResults(data.results));
+        }
+
+        function combineDaysAndPeriods(days, periods) {
+            const combinations = [];
+
+            if (days.includes("不定")) {
+                combinations.push("不定");
+                days = days.filter(day => day !== "不定");
+            }
+
+            if (periods.includes("不定")) {
+                combinations.push("不定");
+                periods = periods.filter(period => period !== "不定");
+            }
+
+            if (days.length > 0 && periods.length > 0) {
+                days.forEach(day => {
+                    periods.forEach(period => {
+                        combinations.push(`${day}${period}`);
+                    });
+                });
+            } else {
+                if (days.length > 0) combinations.push(...days);
+                if (periods.length > 0) combinations.push(...periods);
+            }
+
+            return combinations;
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            results.forEach(result => {
+                const div = document.createElement('div');
+                div.textContent = JSON.stringify(result);
+                resultsDiv.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
