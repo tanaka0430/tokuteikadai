@@ -7,7 +7,7 @@ class User(Base):
     id = Column(Integer,primary_key=True,index=True)
     name = Column(String(255),unique=True,index=True)
     password = Column(String(255))
-    def_calendar = Column(Integer, ForeignKey('user_calendar.id'))
+    def_calendar = Column(Integer,nullable=True)
     is_active = Column(Boolean,default=True)
 
 class aoyama_kougi(Base):
@@ -25,8 +25,8 @@ class aoyama_kougi(Base):
 
 class user_calendar(Base):
     __tablename__ = "user_calendar"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer)
     calendar_name = Column(String(255))
     campus = Column(JSON)
     department = Column(JSON)
@@ -34,13 +34,16 @@ class user_calendar(Base):
     sat_flag = Column(Boolean,default=True)
     sixth_period_flag = Column(Boolean,default=True)
     
+    def __repr__(self):
+        return f"<user_calendar(id={self.id})>"
+    
 
   
 class user_kougi(Base):
     __tablename__ = "user_kougi"
     
-    calendar_id = Column(Integer, ForeignKey('user_calendar.id', ondelete='CASCADE'))
-    kougi_id = Column(Integer, ForeignKey('aoyama_kougi.id', ondelete='CASCADE'))
+    calendar_id = Column(Integer)
+    kougi_id = Column(Integer)
     period = Column(String(50))
     
     __table_args__ = (

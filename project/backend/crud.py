@@ -71,20 +71,17 @@ def read_db(db, id_list, calendar_id):
 
     # aoyama_kougi を取得
     query = db.query(aoyama_kougi).filter(aoyama_kougi.id.in_(id_list))
-    
     result = query.all()
 
-    # 各講義が登録されているかどうかを判定
+    # 結果に `is_registered` を動的に追加
     for kougi in result:
-        # user_kougi から直接判定
         is_registered = db.query(user_kougi).filter(
             user_kougi.kougi_id == kougi.id,
             user_kougi.calendar_id == calendar_id
         ).first() is not None
+        setattr(kougi, "is_registered", is_registered)  # 動的プロパティを追加
 
-        kougi.is_registered = 1 if is_registered else 0
-
-    return {"results": result}
+    return result
 
 
 
@@ -140,7 +137,7 @@ def insert_user_kougi(db: Session, kougi_id: int, calendar_id: int):
     # 時限データのリストを抽出
     periods = [ 
         kougi.時限[i-2:i]
-        for i in range(len(kougi.時限))
+        for i in range(2,len(kougi.時限))
         if kougi.時限[i] == "（"
     ]
 
@@ -173,39 +170,31 @@ def delete_user_kougi(db: Session, kougi_id: int, calendar_id: int):
 
     # 変更をコミット
     db.commit()
+
+def get_user_kougi(calendar_id: int, db: Session):
+    # `user_kougi`から指定されたIDのカレンダーを取得
+    registered_user_kougi = db.query(user_kougi).filter(user_kougi.calendar_id == calendar_id).all()
+
+    # カレンダーが見つからない場合はエラー
+    if not registered_user_kougi:
+        raise HTTPException(status_code=404, detail="Calendar not found")
     
-def manage_user_calendar(calendar_data: UserCalendarModel, mode: str, db: Session):
-    try:
-        # 新規作成モード
-        if mode == "create":
-            return create_calendar(calendar_data, db)
 
-        # 更新モード
-        elif mode == "update":
-            return update_calendar(calendar_data, db)
-
-        # 削除モード
-        elif mode == "delete":
-            return delete_calendar(calendar_data, db)
-
-        # 無効なモードの場合
-        else:
-            raise HTTPException(status_code=400, detail="Invalid mode")
-
-    except Exception as e:
-        db.rollback()  # 例外発生時にロールバック
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-
+    # 取得したカレンダーのみを返す
+    return registered_user_kougi
 
 
 def create_calendar(calendar_data: UserCalendarModel, db: Session):
     """カレンダーの新規作成処理"""
     # PydanticモデルからSQLAlchemyモデルを生成
-    new_calendar = user_calendar(**calendar_data.dict())  # SQLAlchemyモデルに変換
-    db.add(new_calendar)  # 新しいレコードを追加
+    calendar_data_dict = calendar_data.model_dump(exclude={"id"})  # idを除外
+    new_calendar = user_calendar(**calendar_data_dict)  # SQLAlchemyモデルに変換
+    
+    db.add(new_calendar)  # 新しいレコードを追加    
     db.commit()  # 変更をコミット
     db.refresh(new_calendar)  # 挿入されたデータを更新
-    return {"message": "Calendar created successfully", "data": new_calendar}
+    
+    return new_calendar
 
 
 def update_calendar(calendar_data: UserCalendarModel, db: Session):
@@ -217,18 +206,20 @@ def update_calendar(calendar_data: UserCalendarModel, db: Session):
     if not calendar:
         raise HTTPException(status_code=404, detail="Calendar not found")
     
-    # Pydanticモデルから渡された更新データをカレンダーに反映
-    for key, value in calendar_data.dict(exclude_unset=True).items():
+    # Pydanticモデルを辞書に変換して更新データを反映
+    update_data = calendar_data.model_dump()
+    for key, value in update_data.items():
         setattr(calendar, key, value)
     
     db.commit()  # 変更をコミット
-    return {"message": "Calendar updated successfully"}
+    db.refresh(calendar)  # 更新されたデータを取得
+    return calendar
 
 
-def delete_calendar(calendar_data: UserCalendarModel, db: Session):
+def delete_calendar(calendar_id: int, db: Session):
     """カレンダーの削除処理"""
     # 指定されたIDのカレンダーを検索
-    calendar = db.query(user_calendar).filter(user_calendar.id == calendar_data.id).first()
+    calendar = db.query(user_calendar).filter(user_calendar.id == calendar_id).first()
 
     # カレンダーが見つからない場合
     if not calendar:
@@ -236,7 +227,6 @@ def delete_calendar(calendar_data: UserCalendarModel, db: Session):
     
     db.delete(calendar)  # カレンダー削除
     db.commit()  # 変更をコミット
-    return {"message": "Calendar deleted successfully"}
 
 def get_calendar(calendar_id: int, db: Session):
     # `user_calendar`から指定されたIDのカレンダーを取得
@@ -246,17 +236,15 @@ def get_calendar(calendar_id: int, db: Session):
     if not calendar:
         raise HTTPException(status_code=404, detail="Calendar not found")
     
+    #return calendar
+    return UserCalendarModel.model_validate(calendar)
 
-    # 取得したカレンダーのみを返す
-    return {"calendar": calendar}
 
 # ユーザーのdef_calendarを更新する関数
-def update_user_def_calendar(calendar_id: int, db: Session):
-    # カレンダーを取得
-    calendar = get_calendar(calendar_id, db)
+def update_user_def_calendar(user_id: int,calendar_id: int, db: Session):
 
     # ユーザーを取得して、def_calendarを更新
-    user = db.query(User).filter(User.id == calendar.user_id).first()
+    user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -265,28 +253,14 @@ def update_user_def_calendar(calendar_id: int, db: Session):
     user.def_calendar = calendar_id
     db.commit()
     db.refresh(user)  # ユーザーの最新データを反映
+    return {"message": "def_calendar updated successfully"}
 
-    return user
-
-# user_idで関連するカレンダー情報とユーザー情報を取得する関数
-def setup(user_id: int, db: Session):
+# user_idで関連するカレンダー情報を取得する関数
+def calendar_list(user_id: int, db: Session):
     # user_calendarテーブルからuser_idに一致するidとcalendar_nameを取得
-    user_calendar = db.query(user_calendar.id, user_calendar.calendar_name).filter(user_calendar.user_id == user_id).all()
+    calendar = db.query(user_calendar).filter(user_calendar.user_id == user_id).all()
 
-    if not user_calendar:
+    if not calendar:
         raise HTTPException(status_code=404, detail="User calendar not found")
 
-    # usersテーブルからuser_idに一致するnameとdef_calendarを取得
-    user = db.query(User.name, User.def_calendar).filter(User.id == user_id).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # 結果を辞書形式でまとめて返す
-    return {
-        "user_info": {
-            "name": user.name,
-            "def_calendar": user.def_calendar
-        },
-        "user_calendar": user_calendar
-    }
+    return calendar
