@@ -13,7 +13,7 @@ from crud import(
 from models import User
 from schemas import User, UserCreate,SearchRequest,UserCalendarModel
 from database import SessionLocal, engine, Base
-from typing import List
+import sys
 import uvicorn
 
 Base.metadata.create_all(bind=engine)
@@ -110,6 +110,7 @@ async def get_answer(text: str,request: SearchRequest, calendar_id:int, db: Sess
     id_list = filter_course_ids(db, request)
     answer = subset_search_batch(id_list,text)
     results = read_db(db, answer, calendar_id)
+    print(results)
     return {"results": results}
 
 
@@ -118,6 +119,8 @@ async def get_answer(text: str,request: SearchRequest, calendar_id:int, db: Sess
 async def search_courses(request: SearchRequest, calendar_id:int, db: Session = Depends(get_db)):
     id_list = filter_course_ids(db, request)
     results = read_db(db,id_list, calendar_id)
+    print(sys.getrefcount(results)) 
+    print(results)
     return {"results": results}
 
 

@@ -49,7 +49,7 @@ def filter_course_ids(db, request):
 
     # 学期条件
     if request.semesters and request.semesters != ["指定なし"]:
-        semester_conditions = [aoyama_kougi.開講 == semester for semester in request.semesters]
+        semester_conditions = [aoyama_kougi.時限.like(f"%{semester}%") for semester in request.semesters]
         query = query.filter(or_(*semester_conditions))
 
     # 講義名条件
@@ -259,8 +259,5 @@ def update_user_def_calendar(user_id: int,calendar_id: int, db: Session):
 def calendar_list(user_id: int, db: Session):
     # user_calendarテーブルからuser_idに一致するidとcalendar_nameを取得
     calendar = db.query(user_calendar).filter(user_calendar.user_id == user_id).all()
-
-    if not calendar:
-        raise HTTPException(status_code=404, detail="User calendar not found")
-
+    
     return calendar
