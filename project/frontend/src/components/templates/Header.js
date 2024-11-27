@@ -21,7 +21,7 @@ export const Header = () => {
           {/* 中央にログインユーザー名を表示 */}
           <Grid item xs={8} textAlign="center">
             <Typography variant="h6" component="div">
-              ログインユーザ：{loginUser}
+              ログインユーザ：{loginUser.name}
             </Typography>
           </Grid>
 

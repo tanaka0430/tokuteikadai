@@ -15,7 +15,7 @@ export const Home = () => {
     <div>
       <Header />
       <h2>ホーム画面</h2>
-      <p>ようこそ、{loginUser}さん！</p>
+      <p>ようこそ、{loginUser.name}さん！</p>
       <Link to="/chat">チャット画面へ</Link>
     </div>
   );
