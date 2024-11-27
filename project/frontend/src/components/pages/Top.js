@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Header } from '../templates/Header';
 
 // 月曜日から金曜日、縦に1から6を表示する表
 export const Top = () => {
@@ -54,6 +55,8 @@ export const Top = () => {
   };
 
   return (
+    <div>
+      <Header />
     <div style={{
       display: 'flex',
       flexDirection: 'column',
@@ -62,18 +65,6 @@ export const Top = () => {
       height: '100vh',
       backgroundColor: '#008080'  // 画面全体の背景色
     }}>
-
-      {/* 左上に画像とテキストを表示 */}
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        left: '20px',
-        display: 'flex',
-        alignItems: 'center'
-      }}>
-        <img src="" alt="" style={{ width: '50px', height: '50px', marginRight: '10px' }} />
-        <span style={{ color: 'white', fontSize: '18px' }}>青山学院大学</span>
-      </div>
 
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
         <button 
@@ -170,6 +161,7 @@ export const Top = () => {
           {createTable(7, 6)}
         </tbody>
       </table>
+    </div>
     </div>
   );
 };

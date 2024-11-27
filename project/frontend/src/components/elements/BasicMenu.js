@@ -4,11 +4,13 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
+import { useLogout } from "../hooks/useLogout";
 
 export default function BasicMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
+  const Logout = useLogout();
 
   // メニューを開く
   const handleClick = (event) => {
@@ -21,13 +23,23 @@ export default function BasicMenu() {
   };
 
   // 各メニュー項目のクリック処理
-  const handleClickHome = () => {
-    navigate("/");
+  const handleClickChat = () => {
+    navigate("/Chat");
     handleClose();
   };
 
-  const handleClickLogin = () => {
-    navigate("/login");
+  const handleClickLogout = () => {
+    Logout();
+    handleClose();
+  };
+
+  const handleClickTop = () => {
+    navigate("/Top");
+    handleClose();
+  };
+
+  const handleClickSearch = () => {
+    navigate("/Search");
     handleClose();
   };
 
@@ -56,8 +68,10 @@ export default function BasicMenu() {
           "aria-labelledby": "basic-button",
         }}
       >
-        <MenuItem onClick={handleClickHome}>ホーム</MenuItem>
-        <MenuItem onClick={handleClickLogin}>ログアウト</MenuItem>
+        <MenuItem onClick={handleClickTop}>トップ</MenuItem>
+        <MenuItem onClick={handleClickChat}>AIチャット</MenuItem>
+        <MenuItem onClick={handleClickSearch}>講義検索</MenuItem>
+        <MenuItem onClick={handleClickLogout}>ログアウト</MenuItem>
       </Menu>
     </div>
   );
