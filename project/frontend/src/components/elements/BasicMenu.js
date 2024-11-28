@@ -23,6 +23,11 @@ export default function BasicMenu() {
   };
 
   // 各メニュー項目のクリック処理
+  const handleClickHome = () => {
+    navigate("/");
+    handleClose();
+  };
+
   const handleClickChat = () => {
     navigate("/Chat");
     handleClose();
@@ -68,7 +73,8 @@ export default function BasicMenu() {
           "aria-labelledby": "basic-button",
         }}
       >
-        <MenuItem onClick={handleClickTop}>トップ</MenuItem>
+        <MenuItem onClick={handleClickHome}>ホーム</MenuItem>
+        <MenuItem onClick={handleClickTop}>時間割</MenuItem>
         <MenuItem onClick={handleClickChat}>AIチャット</MenuItem>
         <MenuItem onClick={handleClickSearch}>講義検索</MenuItem>
         <MenuItem onClick={handleClickLogout}>ログアウト</MenuItem>

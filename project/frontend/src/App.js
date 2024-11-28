@@ -11,6 +11,7 @@ import { NotFound } from './components/pages/NotFound';
 import { RegisterSucceeded } from './components/pages/RegisterSucceeded';
 import { RegisterFailed } from './components/pages/RegisterFailed';
 import { LoginUserProvider } from './components/providers/LoginUserProvider';
+import { CalendarCreate } from './components/pages/CalendarCreate';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/register" element={<Register/>}/>
           <Route path="/registersucceeded" element={<RegisterSucceeded/>}/>
           <Route path="/registerfailed" element={<RegisterFailed />} />
+          <Route path="/calendar/create" element={<CalendarCreate />} />
           <Route path="*" element={<NotFound/>} />
         </Routes>
       </BrowserRouter>
