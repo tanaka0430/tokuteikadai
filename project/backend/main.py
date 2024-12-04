@@ -64,7 +64,8 @@ def read_user(
         value=session_id,
         httponly=True,
         max_age=86400,  # クッキーの有効期限（1日）
-        # secure=True,  # HTTPSでのみ送信（本番環境で有効化）
+        samesite="None",
+        secure=True,
     )
     return user
 
