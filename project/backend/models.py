@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String,Float,Text, ForeignKey, PrimaryKeyConstraint,JSON
+from sqlalchemy import Boolean, Column, Integer, String,Float,Text, ForeignKey, PrimaryKeyConstraint,JSON,DateTime
 from database import Base
 
 class User(Base):
@@ -22,7 +22,24 @@ class aoyama_kougi(Base):
     学年 = Column(String(255))
     メッセージ = Column(Text)
     url = Column(Text)
-
+    
+class chat_log(Base):
+    __tablename__ = "chat_log"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer)
+    input = Column(Text)
+    generated_input = Column(Text)
+    generated_idlist = Column(JSON)
+    timestamp = Column(DateTime)
+    
+class aoyama_openai_emb(Base):
+    __tablename__ = "aoyama_openai_emb"
+    
+    aoyama_kougi_id = Column(Integer, primary_key=True, autoincrement=True)
+    audi_text = Column(Text)
+    openai_emb = Column(JSON)
+    
 class user_calendar(Base):
     __tablename__ = "user_calendar"
     id = Column(Integer, primary_key=True, autoincrement=True)

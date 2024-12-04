@@ -1,14 +1,14 @@
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from openai_search import subset_search_batch
+from openai_search import subset_search_batch,generate_input
 from crud import(
     get_user,get_user_by_name, get_user_by_name_by_password, 
     create_user,filter_course_ids, read_db,
     get_matching_kougi_ids,insert_user_kougi,
     delete_user_kougi,calendar_list,get_user_kougi,
     create_calendar,update_calendar,delete_calendar,get_calendar,
-    update_user_def_calendar
+    update_user_def_calendar,insert_chat,get_kougi_summary
 )
 from models import User
 from schemas import User, UserCreate,SearchRequest,UserCalendarModel
@@ -106,12 +106,31 @@ def logout_user(response: Response):
 
 #チャット検索
 @app.post("/answer/{text}")
-async def get_answer(text: str,request: SearchRequest, calendar_id:int, db: Session = Depends(get_db)):
-    id_list = filter_course_ids(db, request)
-    answer = subset_search_batch(id_list,text)
+async def get_answer(request: Request,text: str,searchrequest: SearchRequest, calendar_id:int, db: Session = Depends(get_db)):
+    id_list = filter_course_ids(db, searchrequest)
+    question = generate_input(text)
+    answer = subset_search_batch(id_list,question)
+    
+    
+    session_id = request.cookies.get("session_id")
+    if not session_id:
+        user_id = 0  
+    else:
+        user_id = session_id
+    
+    insert_chat(user_id,text,question,answer,db)
+    kougi_summary = get_kougi_summary(answer,db)
     results = read_db(db, answer, calendar_id)
     print(results)
-    return {"results": results}
+    return {"generated_input":question,"results": results,"kougi_summary":kougi_summary}
+
+
+#講義要約文章確認
+#おそらくフロントエンドでは使わない
+@app.post("/kougi/summary")
+def api_get_kougi_summary(kougi_ids: list[int], db: Session = Depends(get_db)):
+    results = get_kougi_summary(kougi_ids,db)
+    return {"results":results}
 
 
 # シラバス検索
