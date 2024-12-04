@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from openai_search import subset_search_batch,generate_input
 from crud import(
-    get_user,get_user_by_name, get_user_by_name_by_password, 
+    get_user,get_user_by_name,
     create_user,filter_course_ids, read_db,
     get_matching_kougi_ids,insert_user_kougi,
     delete_user_kougi,calendar_list,get_user_kougi,
@@ -15,6 +15,8 @@ from schemas import User, UserCreate,SearchRequest,UserCalendarModel
 from database import SessionLocal, engine, Base
 import sys
 import uvicorn
+import bcrypt
+import asyncio
 
 Base.metadata.create_all(bind=engine)
 
@@ -38,11 +40,24 @@ def get_db():
     finally:
         db.close()
 
+def hash_password(password: str) -> str:
+    # パスワードをハッシュ化
+    hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    return hashed_pw.decode('utf-8')
+
+def verify_password(stored_hash: str, password: str) -> bool:
+    # 入力されたパスワードとハッシュ化されたパスワードを照合
+    return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
+
+
 @app.post("/users/register", response_model=User)
 def create_user_endpoint(user: UserCreate, db: Session = Depends(get_db)):
     db_user = get_user_by_name(db, name=user.name)
     if db_user:
         raise HTTPException(status_code=400, detail="Name already registered")
+    
+    hashed_password = hash_password(user.password)
+    user.password = hashed_password
     
     return create_user(db=db, user=user)
 
@@ -53,8 +68,8 @@ def read_user(
     password: str,
     db: Session = Depends(get_db)
 ):
-    user = get_user_by_name_by_password(db, name=name, password=password)
-    if not user:
+    user = get_user_by_name(db, name=name)
+    if not user or not verify_password(user.password, password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # セッションIDをクッキーに保存
@@ -267,5 +282,13 @@ async def get_semesters():
     return {"semesters": SEMESTERS}
 
 
+async def start_uvicorn():
+    config = uvicorn.Config(app, host="0.0.0.0", port=8000, reload=True)
+    server = uvicorn.Server(config)
+    await server.serve()
+
 if __name__ == "__main__":
-    uvicorn.run("main:app", port=8000, reload=True)
+    try:
+        asyncio.run(start_uvicorn())
+    except KeyboardInterrupt:
+        print("Server stopped gracefully.")
