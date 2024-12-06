@@ -11,6 +11,7 @@ import { NotFound } from './components/pages/NotFound';
 import { RegisterSucceeded } from './components/pages/RegisterSucceeded';
 import { RegisterFailed } from './components/pages/RegisterFailed';
 import { LoginUserProvider } from './components/providers/LoginUserProvider';
+import { HomeSetupProvider } from './components/providers/HomeSetupProvider';
 import { CalendarCreate } from './components/pages/CalendarCreate';
 
 function App() {
@@ -18,17 +19,29 @@ function App() {
     <LoginUserProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/top" element={<Top />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/login" element={<Login/>}/>
-          <Route path="/loginfailed" element={<LoginFailed/>}/>
-          <Route path="/register" element={<Register/>}/>
-          <Route path="/registersucceeded" element={<RegisterSucceeded/>}/>
+          {/* ログイン画面や登録画面など、HomeSetupProvider を適用しないルート */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/loginfailed" element={<LoginFailed />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/registersucceeded" element={<RegisterSucceeded />} />
           <Route path="/registerfailed" element={<RegisterFailed />} />
-          <Route path="/calendar/create" element={<CalendarCreate />} />
-          <Route path="*" element={<NotFound/>} />
+          
+          {/* HomeSetupProvider を適用するルート */}
+          <Route
+            path="/*"
+            element={
+              <HomeSetupProvider>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/chat" element={<Chat />} />
+                  <Route path="/top" element={<Top />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/calendar/create" element={<CalendarCreate />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </HomeSetupProvider>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </LoginUserProvider>

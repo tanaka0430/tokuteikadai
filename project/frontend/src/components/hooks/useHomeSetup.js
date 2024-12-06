@@ -1,53 +1,167 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Header } from '../templates/Header';
+import { TextField, Button, Box, Paper, Typography, Link } from '@mui/material';
 import axios from 'axios';
+import { useHomeSetupContext } from '../providers/HomeSetupProvider';
+import { useLectureManagement } from '../hooks/useLectureManagement';
+import RegisterButton from '../elements/RegisterButton';
 
-export const useHomeSetup = () => {
-    const [userId, setUserId] = useState(null);            // ユーザーID
-    const [defCalendarInfo, setDefCalendarInfo] = useState(null); // デフォルトカレンダー情報
-    const [lectureDetails, setLectureDetails] = useState(null);   // 講義詳細
-    const [loading, setLoading] = useState(true);                 // ローディング状態
-    const [error, setError] = useState(null);                     // エラー情報
+export const Chat = () => {
+  const [userInput, setUserInput] = useState('');
+  const [messages, setMessages] = useState([]); // メッセージの配列
+  const { defCalendarInfo } = useHomeSetupContext();
+  const { registerLecture, unregisterLecture, isLectureRegistered } = useLectureManagement(defCalendarInfo);
 
-    useEffect(() => {
-        const fetchHomeSetup = async () => {
-            try {
-                // "/users/info"からデータ取得
-                const userInfoResponse = await axios.get("http://127.0.0.1:8000/users/info", {
-                    withCredentials: true,
-                });
-                const { user_info, calendar_info } = userInfoResponse.data;
+  // ボタンの非活性状態を管理
+  const [disabledState, setDisabledState] = useState({});
 
-                // user_idを保存
-                setUserId(user_info.id);
-                console.log('ID:', user_info.id);
+  const handleSend = async () => {
+    if (userInput.trim() === '') return;
 
-                // def_calendarがnullの場合、デフォルトカレンダー情報を設定せず終了
-                if (user_info.def_calendar === null) {
-                    setLoading(false);
-                    return;
-                }
+    const userMessage = userInput;
 
-                // def_calendar_infoを取得
-                const defCalendar = calendar_info.find(
-                    (calendar) => calendar.id === user_info.def_calendar
-                );
-                setDefCalendarInfo(defCalendar);
+    // ユーザーのメッセージを追加
+    setMessages([...messages, { text: userMessage, sender: 'user' }]);
+    setUserInput('');
 
-                // "/kougi/get/{calendar_id}"で講義情報を取得
-                const lectureResponse = await axios.get(
-                    `http://127.0.0.1:8000/kougi/get/${user_info.def_calendar}`,
-                    { withCredentials: true }
-                );
-                setLectureDetails(lectureResponse.data);
-            } catch (err) {
-                setError(err.response?.data || "データの取得に失敗しました");
-            } finally {
-                setLoading(false); // ローディング終了
-            }
-        };
+    try {
+      // FastAPI エンドポイントに POST リクエストを送信
+      const response = await axios.post(
+        `http://localhost:8000/answer/${encodeURIComponent(userMessage)}`,
+        {
+          campuses: [],
+          dayPeriodCombinations: [],
+          departments: [],
+          semesters: [],
+          courseName: '',
+          instructorName: '',
+        },
+        {
+          params: { calendar_id: defCalendarInfo.id },
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
 
-        fetchHomeSetup();
-    }, []);
+      console.log('API response:', response.data);
 
-    return { userId, defCalendarInfo, lectureDetails, loading, error };
+      // 最初の講義をメッセージに追加
+      if (response.data.results?.length > 0) {
+        const firstLecture = formatLectureMessage(response.data.results[0]);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { text: firstLecture, sender: 'bot', kougi_id: response.data.results[0].id },
+        ]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch answer:', error.message);
+      console.error('Error details:', error.response?.data || error);
+    }
+  };
+
+  const formatLectureMessage = (lecture) => {
+    const isRegistered = isLectureRegistered(lecture.id); // 状態を取得
+    const isDisabled = disabledState[lecture.id]; // 非活性状態を取得
+
+    return (
+      <>
+        <Typography variant="body1">
+          <strong>講義名:</strong> {lecture.科目 || '不明'}
+        </Typography>
+        <Typography variant="body2">
+          <strong>時限:</strong> {lecture.時限 || '不明'}
+        </Typography>
+        {lecture.url && (
+          <Link href={lecture.url} target="_blank" rel="noopener">
+            シラバスを見る
+          </Link>
+        )}
+        <Typography variant="body2">
+          {/* RegisterButton に isDisabled を渡す */}
+          <RegisterButton
+            isRegistered={isRegistered} // 登録状態を渡す
+            isDisabled={isDisabled} // 非活性状態を渡す
+            onRegister={() => {
+              setDisabledState((prev) => ({ ...prev, [lecture.id]: true })); // 非活性にする
+              registerLecture(lecture.id); // 登録処理
+            }}
+            onUnregister={() => {
+              setDisabledState((prev) => ({ ...prev, [lecture.id]: true })); // 非活性にする
+              unregisterLecture(lecture.id); // 登録解除処理
+            }}
+          />
+        </Typography>
+      </>
+    );
+  };
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+      }}
+    >
+      <Header />
+      <Paper
+        elevation={3}
+        sx={{
+          width: '75%',
+          maxWidth: '800px',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: 2,
+        }}
+      >
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            marginBottom: 2,
+          }}
+        >
+          {messages.map((message, index) => (
+            <Box
+              key={index}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                marginBottom: 2,
+              }}
+            >
+              <Paper
+                sx={{
+                  padding: 1,
+                  borderRadius: 2,
+                  maxWidth: '70%',
+                  backgroundColor: message.sender === 'user' ? '#e0f7fa' : '#f0f0f0',
+                }}
+              >
+                {typeof message.text === 'object' ? message.text : <Typography>{message.text}</Typography>}
+              </Paper>
+            </Box>
+          ))}
+        </Box>
+
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            placeholder="メッセージを入力..."
+            sx={{ marginRight: 1 }}
+          />
+          <Button variant="contained" color="primary" onClick={handleSend}>
+            送信
+          </Button>
+        </Box>
+      </Paper>
+    </Box>
+  );
 };
