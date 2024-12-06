@@ -11,14 +11,10 @@ export const Search = () => {
   const [results, setResults] = useState([]);
   const fontSize = '14px'; // ここでフォントサイズを変更できます
 
+
+  
   const handleSearch = () => {
-    const data = [
-      'JavaScript 入門 - 山田先生',
-      'HTMLとCSSの基本 - 田中先生',
-      'Reactの使い方 - 鈴木先生',
-      'Web開発のベストプラクティス - 佐藤先生',
-      'CSSレイアウトのコツ - 伊藤先生'
-    ];
+    const data = [];
 
     const filteredData = data.filter(item =>
       item.toLowerCase().includes(searchTerm1.toLowerCase()) ||
@@ -225,34 +221,67 @@ export const Search = () => {
         </div>
       </div>
 
-      {/* 開講学部の検索ボックス */}
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="departmentSearch" style={{
-            display: 'block',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backgroundColor: '#2e8b57',
-            padding: '5px',
-            marginBottom: '10px',
-            width: '100%'
-          }}>
-          開講学部 / Department
-        </label>
-        <input
-          id="departmentSearch"
-          type="text"
-          placeholder="学部名を入力"
-          style={{
-            color: 'black',
-            width: '100%',
-            padding: '10px',
-            boxSizing: 'border-box'
-          }}
-          value={searchTerm6}
-          onChange={(e) => setSearchTerm6(e.target.value)}
-        />
-      </div>
+     {/* 開講学部のプルダウンメニュー */}
+<div style={{ marginBottom: '15px' }}>
+  <label htmlFor="departmentSelect" style={{
+      display: 'block',
+      color: 'white',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      backgroundColor: '#2e8b57',
+      padding: '5px',
+      marginBottom: '10px',
+      width: '100%'
+    }}>
+    開講学部・学科 / Faculty / Department / Major
+  </label>
+  <select
+    id="departmentSelect"
+    value={searchTerm6}
+    onChange={(e) => setSearchTerm6(e.target.value)}
+    style={{
+      color: searchTerm6 === '' ? 'gray' : 'black',
+      width: '100%',
+      padding: '10px',
+      boxSizing: 'border-box',
+      backgroundColor: 'white',
+      border: '1px solid #ccc',
+      borderRadius: '5px'
+    }}
+  >
+    <option value="" disabled hidden>指定なし/Not specified</option>
+    <option value="a" style={{ color: 'gray' }}>青山スタンダード科目/General Education</option>
+    <option value="b" style={{ color: 'gray' }}>文学部共通/Common Courses</option>
+    <option value="c" style={{ color: 'gray' }}>文学部外国語科目/Foreign Languages</option>
+    <option value="c" style={{ color: 'gray' }}>英米文学科/English</option>
+    <option value="c" style={{ color: 'gray' }}>フランス文学科/French Language and Literature</option>
+    <option value="c" style={{ color: 'gray' }}>日本文学科/Japanese Language and Literature</option>
+    <option value="c" style={{ color: 'gray' }}>史学科/History</option>
+    <option value="c" style={{ color: 'gray' }}>比較芸術学科/Comparative Arts</option>
+    <option value="c" style={{ color: 'gray' }}>経済学部/Economics</option>
+    <option value="c" style={{ color: 'gray' }}>法学部/Law</option>
+    <option value="c" style={{ color: 'gray' }}>経営学部/Business</option>
+    <option value="c" style={{ color: 'gray' }}>理工学部共通/Common Courses</option>
+    <option value="c" style={{ color: 'gray' }}>物理・数理/Pysics and Mathematics</option>
+    <option value="c" style={{ color: 'gray' }}>科学・生命/Chemistry and Biological Science</option>
+    <option value="c" style={{ color: 'gray' }}>電気電子工学科/Electrical Engineering and Electronics, College of Science and Engineering</option>
+    <option value="c" style={{ color: 'gray' }}>機械創造/Mechanical Engineering</option>
+    <option value="c" style={{ color: 'gray' }}>経営システム/Industrial and Systems Engineering</option>
+    <option value="c" style={{ color: 'gray' }}>情報テクノロジー/Integrated Information Technology</option>
+    <option value="c" style={{ color: 'gray' }}>物理科学/Physical Sciences</option>
+    <option value="c" style={{ color: 'gray' }}>数理サイエンス/Mathematical Sciences</option>
+    <option value="c" style={{ color: 'gray' }}>国際政治経済学部/International Politics, Economics and Communication</option>
+    <option value="c" style={{ color: 'gray' }}>総合文化政策学部/Cultural and Creative Studies</option>
+    <option value="c" style={{ color: 'gray' }}>社会情報学部/Social Informatics</option>
+    <option value="c" style={{ color: 'gray' }}>教育人間 外国語科目/Foreign Languages</option>
+    <option value="c" style={{ color: 'gray' }}>教育人間 教育学科/Education </option>
+    <option value="c" style={{ color: 'gray' }}>教育人間 心理学科/Psychology</option>
+    <option value="c" style={{ color: 'gray' }}>地球社会共生学部/Global Studies and Collaboration</option>
+    <option value="c" style={{ color: 'gray' }}>コミュニティ人間科学部/Community Studies</option>
+    <option value="c" style={{ color: 'gray' }}>教職課程科目/Teacher Training Courses</option>
+  </select>
+</div>
+
 
       {/* 学期の選択 */}
       <div style={{ marginBottom: '15px' }}>
