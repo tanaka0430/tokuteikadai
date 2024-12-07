@@ -4,7 +4,7 @@ import { TextField, Button, Box, Paper, Typography, Link } from '@mui/material';
 import axios from 'axios';
 import { useHomeSetupContext } from '../providers/HomeSetupProvider';
 import { useLectureManagement } from '../hooks/useLectureManagement';
-import RegisterButton from '../elements/RegisterButton';
+import RegisterButton from '../elements/RegisterButton'; // インポート
 
 export const Chat = () => {
   const [userInput, setUserInput] = useState('');
@@ -24,7 +24,7 @@ export const Chat = () => {
     try {
       // FastAPI エンドポイントに POST リクエストを送信
       const response = await axios.post(
-        'http://localhost:8000/answer/${encodeURIComponent(userMessage)}',
+        `http://localhost:8000/answer/${encodeURIComponent(userMessage)}`,
         {
           campuses: [],
           dayPeriodCombinations: [],
@@ -56,8 +56,6 @@ export const Chat = () => {
   };
 
   const formatLectureMessage = (lecture) => {
-    const isRegistered = isLectureRegistered(lecture.id); // 状態を取得
-  
     return (
       <>
         <Typography variant="body1">
@@ -72,14 +70,85 @@ export const Chat = () => {
           </Link>
         )}
         <Typography variant="body2">
-          {/* RegisterButton に isRegistered を渡す */}
+          {/* RegisterButton の使用 */}
           <RegisterButton
-            isRegistered={isRegistered} // 登録状態を渡す
-            onRegister={() => registerLecture(lecture.id)} // 登録処理
-            onUnregister={() => unregisterLecture(lecture.id)} // 登録解除処理
+            isRegistered={isLectureRegistered(lecture.id)}
+            onRegister={() => registerLecture(lecture.id)}
+            onUnregister={() => unregisterLecture(lecture.id)}
           />
         </Typography>
       </>
     );
   };
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+      }}
+    >
+      <Header />
+      <Paper
+        elevation={3}
+        sx={{
+          width: '75%',
+          maxWidth: '800px',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: 2,
+        }}
+      >
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            marginBottom: 2,
+          }}
+        >
+          {messages.map((message, index) => (
+            <Box
+              key={index}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                marginBottom: 2,
+              }}
+            >
+              <Paper
+                sx={{
+                  padding: 1,
+                  borderRadius: 2,
+                  maxWidth: '70%',
+                  backgroundColor: message.sender === 'user' ? '#e0f7fa' : '#f0f0f0',
+                }}
+              >
+                {typeof message.text === 'object' ? message.text : <Typography>{message.text}</Typography>}
+              </Paper>
+            </Box>
+          ))}
+        </Box>
+
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            placeholder="メッセージを入力..."
+            sx={{ marginRight: 1 }}
+          />
+          <Button variant="contained" color="primary" onClick={handleSend}>
+            送信
+          </Button>
+        </Box>
+      </Paper>
+    </Box>
+  );
 };
