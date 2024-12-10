@@ -3,11 +3,11 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { Grid } from '@mui/material';
-import { LoginUserContext } from '../providers/LoginUserProvider';
+import { UserContext } from '../providers/UserProvider';
 import BasicMenu from '../elements/BasicMenu';
 
 export const Header = () => {
-  const { loginUser } = useContext(LoginUserContext);
+  const { loginUser } = useContext(UserContext);
 
   return (
     <AppBar position="static">

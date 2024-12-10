@@ -1,14 +1,14 @@
 import React, { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
-import { LoginUserContext } from '../providers/LoginUserProvider';
+import { UserContext } from '../providers/UserProvider';
 import { Header } from '../templates/Header';
-import { useHomeSetupContext } from '../providers/HomeSetupProvider';
 import { useNavigate } from 'react-router-dom';
+import { useSetup } from '../hooks/useSetup';
 
 
 export const Home = () => {
-    const { isLogined } = useContext(LoginUserContext);
-    const { defCalendarInfo } = useHomeSetupContext();
+    const { isLogined } = useContext(UserContext);
+    const { defCalendarInfo } = useSetup();
     const navigate = useNavigate();
 
     if (!isLogined) {

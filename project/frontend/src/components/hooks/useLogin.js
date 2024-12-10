@@ -1,10 +1,10 @@
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
-import { LoginUserContext } from '../providers/LoginUserProvider';
+import { UserContext } from '../providers/UserProvider';
 
 export const useLogin = () => {
-    const {setLoginUser, setIsLogined } = useContext(LoginUserContext);
+    const {setLoginUser, setIsLogined } = useContext(UserContext);
     const navigate = useNavigate();
     
     const login = (user) => {

@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Header } from '../templates/Header';
-import { useHomeSetupContext } from '../providers/HomeSetupProvider';
+import { useSetup } from '../hooks/useSetup';
+
 
 export const CalendarCreate = () => {
     const navigate = useNavigate();
-    const { userId } = useHomeSetupContext(); // userIdを取得
+    const { userId } = useSetup(); // userIdを取得
 
     // フォームの状態管理
     const [formData, setFormData] = useState({
