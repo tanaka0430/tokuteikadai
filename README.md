@@ -57,7 +57,7 @@ http://agu-syllabus.ddo.jp/
 | Category          | Technology Stack                                     |
 | ----------------- | --------------------------------------------------   |
 | Frontend          | JavaScript, React                                    |
-| Backend           | Python, FastAPI, Uvicorn, SQLAlchemy, Uvicorn        |
+| Backend           | Python, FastAPI, Uvicorn, SQLAlchemy                 |
 | AI Services       | OpenAI API                                           |
 | Infrastructure    | Amazon Web Services, Nginx, Dynamic DO!.jp           |
 | Database          | MySQL, FAISS (Vector Database)                       |
@@ -70,7 +70,8 @@ http://agu-syllabus.ddo.jp/
 ##  システム構成図
 
 ![システム構成図](/docs/img/awsシステム構成図.png)
-（実際の構成に合わせて修正する）
+
+（実際の構成に合わせて修正する。画像の元データはgoogledriveにあり、編集できる。）
 
 <br />
 
