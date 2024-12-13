@@ -74,27 +74,38 @@ export const CalendarCreate = () => {
             return;
         }
     
-        // データ整形
-        const payload = {
-            ...formData,
-            id: 0,
-            user_id: userId,
-            campus: formData.campus || null, // 空の場合は null にする
-            semester: formData.semester || null, // 空の場合は null にする
-            department: formData.department.length > 0 ? formData.department : null, // 空リストの場合は null にする
+        // リクエストボディの作成
+        const requestBody = {
+            id: 0, // カレンダー作成時はデフォルト値として 0 を設定
+            user_id: userId, // ユーザー ID を設定
+            calendar_name: formData.calendar_name.trim() || "", // 必須フィールド（空白をトリム）
+            campus: formData.campus ? [formData.campus] : [], // 単一値をリストに変換
+            semester: formData.semester ? [formData.semester] : [], // 単一値をリストに変換
+            department: formData.department.length > 0 ? formData.department : [], // 空リスト対応
+            sat_flag: Boolean(formData.sat_flag), // ブール値に変換
+            sixth_period_flag: Boolean(formData.sixth_period_flag), // ブール値に変換
         };
+    
+        console.log('送信するリクエストボディ:', requestBody); // デバッグ用ログ
     
         try {
             const response = await axios.post(
-                'http://127.0.0.1:8000/calendar/c-u/c',
-                payload,
-                { withCredentials: true }
+                `http://127.0.0.1:8000/calendar/c-u/c`,
+                requestBody, // リクエストボディ
+                { headers: { "Content-Type": "application/json" }, withCredentials: true }
             );
             console.log('カレンダー作成成功:', response.data);
-            navigate('/');
+            navigate('/'); // 成功後にリダイレクト
         } catch (error) {
             console.error('カレンダー作成失敗:', error.response?.data || error);
-            alert('カレンダー作成に失敗しました');
+    
+            // APIからのエラー詳細を表示
+            if (error.response?.data?.detail) {
+                console.error('エラー詳細:', error.response.data.detail);
+                alert(`カレンダー作成に失敗しました: ${error.response.data.detail.map(d => d.msg).join(', ')}`);
+            } else {
+                alert('カレンダー作成に失敗しました');
+            }
         }
     };
 

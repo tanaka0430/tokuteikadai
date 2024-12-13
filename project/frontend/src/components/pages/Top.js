@@ -1,44 +1,58 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Header } from '../templates/Header';
-import { useContext } from 'react';
-import { UserContext } from '../providers/UserProvider';
 import { useSetup } from '../hooks/useSetup';
-import { useNavigate } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
 
 export const Top = () => {
-  const { isLogined } = useContext(UserContext); // ログインを確認
   const { defCalendarInfo, lectureInfo } = useSetup(); // デフォルトカレンダーと講義情報を取得
-  const navigate = useNavigate();
 
-  const [showYearOptions, setShowYearOptions] = useState(false); // 年度選択肢
-  const [showMonthOptions, setShowMonthOptions] = useState(false); // 年選択肢
-  const [showTermOptions, setShowTermOptions] = useState(false); // 学期選択肢
+  // デバッグ用ログを追加
+  console.log('defCalendarInfo:', defCalendarInfo);
+  console.log('lectureInfo:', lectureInfo);
 
   // 時間割テーブルを作成する
-  const createTable = (rows, cols) => {
-    const days = ["月", "火", "水", "木", "金"];
-    const lectureMap = lectureInfo?.registered_user_kougi.reduce((map, lecture) => {
-      const [day, period] = lecture.period.split(/(?<=^[^\\d]+)/); // "月1" -> ["月", "1"]
-      if (!map[day]) map[day] = {};
-      map[day][period] = lecture.kougi_id; // 登録された講義IDを保存
+  const createTable = () => {
+    const days = ['月', '火', '水', '木', '金'];
+    if (defCalendarInfo?.sat_flag) days.push('土'); // 土曜日を追加
+
+    const maxPeriods = defCalendarInfo?.sixth_period_flag ? 6 : 5; // 6限までか5限までか
+
+    // 曜日と時限のマッピングを修正
+    const lectureMap =
+      lectureInfo?.registered_user_kougi.reduce((map, lecture) => {
+        const match = lecture.period.match(/^([^\d]+)(\d*)$/); // 正規表現で曜日と時限を分割
+        if (match) {
+          const [_, day, period] = match;
+          if (!map[day]) map[day] = {};
+          map[day][period || ''] = lecture.kougi_id; // 空の時限でも格納
+        } else {
+          console.warn('Unmatched period format:', lecture.period); // 不一致の場合の警告
+        }
+        return map;
+      }, {}) || {};
+
+    console.log('lectureMap:', lectureMap); // デバッグ用
+
+    const lectureDetails = lectureInfo?.results.reduce((map, lecture) => {
+      map[lecture.id] = lecture.科目; // 講義IDをキーにして科目名をマッピング
       return map;
-    }, {}) || {};
+    }, {});
+
+    console.log('lectureDetails:', lectureDetails); // デバッグ用
 
     let table = [];
-    for (let i = 0; i < rows; i++) {
+    for (let i = 0; i <= maxPeriods; i++) {
       let row = [];
-
-      for (let j = 0; j < cols; j++) {
+      for (let j = 0; j <= days.length; j++) {
         let cellContent = '';
         if (i === 0 && j > 0) {
-          cellContent = days[j - 1];
+          cellContent = days[j - 1]; // 曜日ヘッダー
         } else if (j === 0 && i > 0) {
-          cellContent = i;
+          cellContent = i; // 時限ヘッダー
         } else if (i > 0 && j > 0) {
           const day = days[j - 1];
           const period = i.toString();
-          cellContent = lectureMap[day]?.[period] || ''; // 該当する講義IDまたは空白
+          const lectureId = lectureMap[day]?.[period];
+          cellContent = lectureDetails?.[lectureId] || ''; // 科目名または空白
         }
 
         row.push(
@@ -50,6 +64,8 @@ export const Top = () => {
               textAlign: 'center',
               border: '1px solid white',
               color: 'white',
+              backgroundColor: cellContent ? '#006666' : 'transparent', // 科目がある場合背景色を設定
+              borderRadius: cellContent ? '8px' : '0',
             }}
           >
             {cellContent}
@@ -61,107 +77,23 @@ export const Top = () => {
     return table;
   };
 
-  const toggleYearOptions = () => {
-    setShowYearOptions(!showYearOptions);
-    setShowMonthOptions(false);
-    setShowTermOptions(false);
-  };
-
-  const toggleMonthOptions = () => {
-    setShowMonthOptions(!showMonthOptions);
-    setShowYearOptions(false);
-    setShowTermOptions(false);
-  };
-
-  const toggleTermOptions = () => {
-    setShowTermOptions(!showTermOptions);
-    setShowYearOptions(false);
-    setShowMonthOptions(false);
-  };
-
-  // 非ログイン状態の処理
-  if (!isLogined) {
-    return <Navigate to="/login" />;
-  } else {
-    return (
-      <div>
-        <Header />
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100vh',
-            backgroundColor: '#008080', // 画面全体の背景色
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-            <button
-              onClick={toggleYearOptions}
-              style={{
-                padding: '10px 30px',
-                fontSize: '16px',
-                borderRadius: '50px',
-                backgroundColor: 'white',
-                color: '#008080',
-                border: 'none',
-                marginRight: '20px',
-              }}
-            >
-              年度
-            </button>
-
-            <button
-              onClick={toggleMonthOptions}
-              style={{
-                padding: '10px 30px',
-                fontSize: '16px',
-                borderRadius: '50px',
-                backgroundColor: 'white',
-                color: '#008080',
-                border: 'none',
-                marginRight: '20px',
-              }}
-            >
-              年
-            </button>
-
-            <button
-              onClick={toggleTermOptions}
-              style={{
-                padding: '10px 30px',
-                fontSize: '16px',
-                borderRadius: '50px',
-                backgroundColor: 'white',
-                color: '#008080',
-                border: 'none',
-              }}
-            >
-              学期
-            </button>
-          </div>
-
-          <table style={{ borderCollapse: 'collapse' }}>
-            <tbody>{createTable(7, 6)}</tbody>
-          </table>
-          {/* カレンダー作成ボタン */}
-          <button
-            onClick={() => navigate('/calendar/create')}
-            style={{
-              padding: '10px 30px',
-              fontSize: '16px',
-              borderRadius: '50px',
-              backgroundColor: 'white',
-              color: '#008080',
-              border: 'none',
-              marginRight: '20px',
-            }}
-          >
-            カレンダー作成
-          </button>
-        </div>
+  return (
+    <div>
+      <Header />
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          backgroundColor: '#008080', // 画面全体の背景色
+        }}
+      >
+        <table style={{ borderCollapse: 'collapse' }}>
+          <tbody>{createTable()}</tbody>
+        </table>
       </div>
-    );
-  }
+    </div>
+  );
 };
