@@ -29,7 +29,7 @@ export default function BasicMenu() {
   };
 
   const handleClickChat = () => {
-    navigate("/Chat");
+    navigate("/chat");
     handleClose();
   };
 
@@ -39,12 +39,12 @@ export default function BasicMenu() {
   };
 
   const handleClickTop = () => {
-    navigate("/Top");
+    navigate("/timetable");
     handleClose();
   };
 
   const handleClickSearch = () => {
-    navigate("/Search");
+    navigate("/search");
     handleClose();
   };
 
@@ -75,8 +75,8 @@ export default function BasicMenu() {
       >
         <MenuItem onClick={handleClickHome}>ホーム</MenuItem>
         <MenuItem onClick={handleClickTop}>時間割</MenuItem>
-        <MenuItem onClick={handleClickChat}>AIチャット</MenuItem>
         <MenuItem onClick={handleClickSearch}>講義検索</MenuItem>
+        <MenuItem onClick={handleClickChat}>チャット検索</MenuItem>
         <MenuItem onClick={handleClickLogout}>ログアウト</MenuItem>
       </Menu>
     </div>

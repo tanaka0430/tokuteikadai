@@ -18,7 +18,7 @@ export const RegisterLecture = () => {
     try {
       await registerLecture(lecture.id);
       alert(`「${lecture.科目}」を登録しました。`);
-      navigate('/chat'); // 戻る（Chat.jsへ）
+      navigate(-1); // 戻る
     } catch (error) {
       console.error('登録失敗:', error);
       alert('登録に失敗しました。');
@@ -29,7 +29,7 @@ export const RegisterLecture = () => {
     try {
       await unregisterLecture(lecture.id);
       alert(`「${lecture.科目}」を解除しました。`);
-      navigate('/chat'); // 戻る（Chat.jsへ）
+      navigate(-1); // 戻る
     } catch (error) {
       console.error('解除失敗:', error);
       alert('解除に失敗しました。');
@@ -52,13 +52,13 @@ export const RegisterLecture = () => {
         </Typography>
         <Typography variant="body1">
           <strong>シラバス:</strong>{' '}
-          <a href={lecture.url} target="_blank" rel="noopener">
+          <a href={lecture.url} target="_blank" rel="noopener noreferrer" >
             詳細を見る
           </a>
         </Typography>
       </Paper>
       {registered ? (
-        <Button variant="outlined" color="secondary" onClick={handleUnregister}>
+        <Button variant="outlined" color="error" onClick={handleUnregister}>
           登録解除
         </Button>
       ) : (
@@ -68,7 +68,7 @@ export const RegisterLecture = () => {
       )}
       <Button
         variant="text"
-        onClick={() => navigate('/chat')} // 戻るボタン
+        onClick={() => navigate(-1)} // 戻るボタン
         sx={{ marginLeft: 2 }}
       >
         キャンセル
