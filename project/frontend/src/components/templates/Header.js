@@ -10,7 +10,7 @@ export const Header = () => {
   const { loginUser } = useContext(UserContext);
 
   return (
-    <AppBar position="static">
+    <AppBar position="sticky" elevation={0}>
       <Toolbar>
         <Grid container alignItems="center">
           {/* 左端にアイコンボタン (MENU) */}
