@@ -81,15 +81,53 @@ http://agu-syllabus.ddo.jp/
 
 <br />
 
-##  環境構築
+## テーブル解説
+
 後で書く
-#### nginxの設定ファイル
-#### 詰まりがちなポイントの解決法
+
 <br />
 
-##  運用方法
+## API解説
+
 後で書く
-#### スクレイピングの注意点
+
+<br />
+
+## 自然言語検索の仕組み
+
+![後で作る]()
+
+<br />
+
+##  環境構築
+後で書く<br>
+git clone(/home/ec2-user/配下は注意)<br>
+apiのパス修正（変えてcommitすべきかも）<br>
+
+dumpでDB構築<br>
+
+python pip install<br>
+myenv<br>
+requirements.txt<br>
+.env<br>
+nginx<br>
+　start<br>
+　設定ファイル<br>
+　権限（701）<br>
+node.js react<br>
+　スワップ領域<br>
+　npm install<br>
+　react build<br>
+uvicorn<br>
+　自動起動
+<br />
+
+##  注意事項
+#### スクレイピング
+後で書く<br>
+スクレイピングの順番<br>
+年度からむの追加<br>
+faiss_index.binは年度で絞ってから　
 <br />
 
 ## 今後の展望（いらないかも）
