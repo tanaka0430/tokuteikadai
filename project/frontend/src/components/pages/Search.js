@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Header } from '../templates/Header';
 
 export const Search = () => {
   const [searchTerm1, setSearchTerm1] = useState('');
@@ -34,6 +35,8 @@ export const Search = () => {
   };
 
   return (
+    <div>
+      <Header />
     <div style={{ backgroundColor: '#8fbc8f', minHeight: '100vh', padding: '20px' }}>
       <h1 style={{ color: 'white', textAlign: 'center' }}>時間割・講義内容検索</h1>
 
@@ -337,6 +340,7 @@ export const Search = () => {
           <p>該当する結果はありません。</p>
         )}
       </div>
+    </div>
     </div>
   );
 };

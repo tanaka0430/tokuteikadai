@@ -1,175 +1,99 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Header } from '../templates/Header';
+import { useSetup } from '../hooks/useSetup';
 
-// 月曜日から金曜日、縦に1から6を表示する表
 export const Top = () => {
-  // それぞれのボタンの表示状態を管理
-  const [showYearOptions, setShowYearOptions] = useState(false); // 年度選択肢
-  const [showMonthOptions, setShowMonthOptions] = useState(false); // 年選択肢
-  const [showTermOptions, setShowTermOptions] = useState(false); // 学期選択肢
+  const { defCalendarInfo, lectureInfo } = useSetup(); // デフォルトカレンダーと講義情報を取得
 
-  const createTable = (rows, cols) => {
-    const days = ["月", "火", "水", "木", "金"];  
+  // デバッグ用ログを追加
+  console.log('defCalendarInfo:', defCalendarInfo);
+  console.log('lectureInfo:', lectureInfo);
+
+  // 時間割テーブルを作成する
+  const createTable = () => {
+    const days = ['月', '火', '水', '木', '金'];
+    if (defCalendarInfo?.sat_flag) days.push('土'); // 土曜日を追加
+
+    const maxPeriods = defCalendarInfo?.sixth_period_flag ? 6 : 5; // 6限までか5限までか
+
+    // 曜日と時限のマッピングを修正
+    const lectureMap =
+      lectureInfo?.registered_user_kougi.reduce((map, lecture) => {
+        const match = lecture.period.match(/^([^\d]+)(\d*)$/); // 正規表現で曜日と時限を分割
+        if (match) {
+          const [_, day, period] = match;
+          if (!map[day]) map[day] = {};
+          map[day][period || ''] = lecture.kougi_id; // 空の時限でも格納
+        } else {
+          console.warn('Unmatched period format:', lecture.period); // 不一致の場合の警告
+        }
+        return map;
+      }, {}) || {};
+
+    console.log('lectureMap:', lectureMap); // デバッグ用
+
+    const lectureDetails = lectureInfo?.results.reduce((map, lecture) => {
+      map[lecture.id] = lecture.科目; // 講義IDをキーにして科目名をマッピング
+      return map;
+    }, {});
+
+    console.log('lectureDetails:', lectureDetails); // デバッグ用
+
     let table = [];
-
-    for (let i = 0; i < rows; i++) {
+    for (let i = 0; i <= maxPeriods; i++) {
       let row = [];
-      
-      for (let j = 0; j < cols; j++) {
+      for (let j = 0; j <= days.length; j++) {
         let cellContent = '';
-
         if (i === 0 && j > 0) {
-          cellContent = days[j - 1];
+          cellContent = days[j - 1]; // 曜日ヘッダー
         } else if (j === 0 && i > 0) {
-          cellContent = i;
+          cellContent = i; // 時限ヘッダー
+        } else if (i > 0 && j > 0) {
+          const day = days[j - 1];
+          const period = i.toString();
+          const lectureId = lectureMap[day]?.[period];
+          cellContent = lectureDetails?.[lectureId] || ''; // 科目名または空白
         }
 
         row.push(
-          <td key={`${i}-${j}`} style={{ width: '120px', height: '80px', textAlign: 'center', border: '1px solid white', color: 'white' }}>
+          <td
+            key={`${i}-${j}`}
+            style={{
+              width: '120px',
+              height: '80px',
+              textAlign: 'center',
+              border: '1px solid white',
+              color: 'white',
+              backgroundColor: cellContent ? '#006666' : 'transparent', // 科目がある場合背景色を設定
+              borderRadius: cellContent ? '8px' : '0',
+            }}
+          >
             {cellContent}
           </td>
         );
       }
       table.push(<tr key={i}>{row}</tr>);
     }
-
     return table;
   };
 
-  const toggleYearOptions = () => {
-    setShowYearOptions(!showYearOptions);
-    setShowMonthOptions(false);
-    setShowTermOptions(false);
-  };
-
-  const toggleMonthOptions = () => {
-    setShowMonthOptions(!showMonthOptions);
-    setShowYearOptions(false);
-    setShowTermOptions(false);
-  };
-
-  const toggleTermOptions = () => {
-    setShowTermOptions(!showTermOptions);
-    setShowYearOptions(false);
-    setShowMonthOptions(false);
-  };
-
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-      backgroundColor: '#008080'  // 画面全体の背景色
-    }}>
-
-      {/* 左上に画像とテキストを表示 */}
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        left: '20px',
-        display: 'flex',
-        alignItems: 'center'
-      }}>
-        <img src="" alt="" style={{ width: '50px', height: '50px', marginRight: '10px' }} />
-        <span style={{ color: 'white', fontSize: '18px' }}>青山学院大学</span>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-        <button 
-          onClick={toggleYearOptions}
-          style={{
-            padding: '10px 30px',
-            fontSize: '16px',
-            borderRadius: '50px',
-            backgroundColor: 'white',
-            color: '#008080',
-            border: 'none',
-            marginRight: '20px'
-          }}>
-          年度
-        </button>
-
-        <button 
-          onClick={toggleMonthOptions}
-          style={{
-            padding: '10px 30px',
-            fontSize: '16px',
-            borderRadius: '50px',
-            backgroundColor: 'white',
-            color: '#008080',
-            border: 'none',
-            marginRight: '20px'
-          }}>
-          年
-        </button>
-
-        <button 
-          onClick={toggleTermOptions}
-          style={{
-            padding: '10px 30px',
-            fontSize: '16px',
-            borderRadius: '50px',
-            backgroundColor: 'white',
-            color: '#008080',
-            border: 'none',
-          }}>
-          学期
-        </button>
-      </div>
-
-      <div 
+    <div>
+      <Header />
+      <div
         style={{
-          opacity: showYearOptions ? 1 : 0,
-          transform: showYearOptions ? 'translateY(0)' : 'translateY(-20px)',
-          transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
-          display: showYearOptions ? 'block' : 'none',
-          marginBottom: '10px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          backgroundColor: '#008080', // 画面全体の背景色
         }}
       >
-        <select style={{ padding: '10px', fontSize: '16px', color: '#008080' }}>
-          {[2020, 2021, 2022, 2023, 2024, 2025].map(year => (
-            <option key={year} value={year}>{year}年</option>
-          ))}
-        </select>
+        <table style={{ borderCollapse: 'collapse' }}>
+          <tbody>{createTable()}</tbody>
+        </table>
       </div>
-
-      <div 
-        style={{
-          opacity: showMonthOptions ? 1 : 0,
-          transform: showMonthOptions ? 'translateY(0)' : 'translateY(-20px)',
-          transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
-          display: showMonthOptions ? 'block' : 'none',
-          marginBottom: '10px',
-        }}
-      >
-        <select style={{ padding: '10px', fontSize: '16px', color: '#008080' }}>
-          {[1, 2, 3, 4].map(year => (
-            <option key={year} value={year}>{year}年</option>
-          ))}
-        </select>
-      </div>
-
-      <div 
-        style={{
-          opacity: showTermOptions ? 1 : 0,
-          transform: showTermOptions ? 'translateY(0)' : 'translateY(-20px)',
-          transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
-          display: showTermOptions ? 'block' : 'none',
-        }}
-      >
-        <select style={{ padding: '10px', fontSize: '16px', color: '#008080' }}>
-          {['前期', '後期'].map((term, index) => (
-            <option key={index} value={term}>{term}</option>
-          ))}
-        </select>
-      </div>
-
-      <table style={{ borderCollapse: 'collapse' }}>
-        <tbody>
-          {createTable(7, 6)}
-        </tbody>
-      </table>
     </div>
   );
 };

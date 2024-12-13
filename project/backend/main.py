@@ -24,8 +24,8 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    #allow_origins=["http://localhost:3000"],
+    #allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -79,7 +79,8 @@ def read_user(
         value=session_id,
         httponly=True,
         max_age=86400,  # クッキーの有効期限（1日）
-        # secure=True,  # HTTPSでのみ送信（本番環境で有効化）
+        samesite="None",
+        secure=True,
     )
     return user
 
