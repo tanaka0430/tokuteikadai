@@ -10,6 +10,7 @@ export const Search = () => {
   const [searchTerm7, setSearchTerm7] = useState(''); // 学期用
   const [results, setResults] = useState([]);
   const fontSize = '14px'; // ここでフォントサイズを変更できます
+  
 
 
   
@@ -108,8 +109,9 @@ export const Search = () => {
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
-            width: '50%',
+            justifyContent: 'center', // 中央寄りに配置
+            gap: '20px', // 選択肢間の間隔を設定
+            width: '95%',
             margin: '0 auto',
             border: '2px solid white',
             padding: '10px',
@@ -122,7 +124,7 @@ export const Search = () => {
               value="青山キャンパス"
               checked={searchTerm3 === "青山キャンパス"}
               onChange={(e) => setSearchTerm3(e.target.value)}
-              style={{ marginRight: '10px' }}
+              style={{ marginRight: '2px' }}
             />
             青山キャンパス
           </label>
@@ -132,94 +134,178 @@ export const Search = () => {
               value="相模原キャンパス"
               checked={searchTerm3 === "相模原キャンパス"}
               onChange={(e) => setSearchTerm3(e.target.value)}
-              style={{ marginRight: '10px' }}
+              style={{ marginRight: '2px' }}
             />
             相模原キャンパス
           </label>
         </div>
       </div>
 
-      {/* 曜日の選択（ラジオボタン形式） */}
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="daySelect" style={{
-            display: 'block',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backgroundColor: '#2e8b57',
-            padding: '5px',
-            marginBottom: '10px',
-            width: '100%'
-          }}>
-          曜日 / Day
-        </label>
-        <div 
+    {/* 曜日の選択（ラジオボタン形式） */}
+<div style={{ marginBottom: '10px' }}>
+  <label
+    htmlFor="daySelect"
+    style={{
+      display: 'block',
+      color: 'white',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      backgroundColor: '#2e8b57',
+      padding: '5px',
+      marginBottom: '10px',
+      width: '100%',
+    }}
+  >
+    曜日 / Day
+  </label>
+  <div
+    style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      justifyContent: 'center', // 水平方向の中央揃え
+      gap: '10px',
+      width: '95%',
+      margin: '0 auto',
+      border: '2px solid white',
+      padding: '5px 10px', // 余白を調整（上下のパディングを小さく）
+      backgroundColor: 'white',
+      borderRadius: '5px',
+      alignItems: 'center', // 垂直方向の中央揃え
+    }}
+  >
+    {[
+      "月曜日  /Monday",
+      "火曜日  /Tuesday",
+      "水曜日  /Wednesday",
+      "木曜日  /Thursday",
+      "金曜日  /Friday",
+      "土曜日  /Saturday",
+      "不定    /NoSetClass",
+      "   ", // 空白のラジオボタン
+      "   ", // 空白のラジオボタン
+    ].map((day, index) => (
+      <label
+        key={day}
+        style={{
+          display: 'flex',
+          alignItems: 'center', // ラジオボタンとテキストを垂直方向で中央揃え
+          justifyContent: 'flex-start', // 水平方向で中央揃え
+          fontWeight: 'bold',
+          color: 'gray',
+          width: '30%',
+          fontSize: fontSize,
+          height: '40px', // ラベルの高さを調整
+          boxSizing: 'border-box',
+          position: 'relative',
+          textAlign: 'center', // 文字を中央揃え
+        }}
+      >
+        <input
+          type="radio"
+          value={day}
+          checked={searchTerm4 === day}
+          onChange={(e) => setSearchTerm4(e.target.value)}
           style={{
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            justifyContent: 'space-between', 
-            width: '70%', 
-            margin: '0 auto',
-            border: '2px solid white',  
-            padding: '10px', 
-            backgroundColor: 'white',  
-            borderRadius: '5px' 
-          }}>
-          {["月曜日/Monday", "火曜日/Tuesday", "水曜日/Wednesday", "木曜日/Thursday", "金曜日/Friday", "土曜日/Saturday", "不定/No Set Class"].map(day => (
-            <label key={day} style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', color: 'gray', width: '30%', fontSize: fontSize }}>
-              <input
-                type="radio"
-                value={day}
-                checked={searchTerm4 === day}
-                onChange={(e) => setSearchTerm4(e.target.value)}
-                style={{ marginRight: '10px' }}
-              />
-              {day}
-            </label>
-          ))}
-        </div>
-      </div>
+            marginRight: '8px', // ラジオボタンとテキストの間隔を調整
+            verticalAlign: 'middle', // ラジオボタンとテキストを中央に揃える
+            display: day.trim() === "" ? "none" : "inline-block",
+            position: 'relative',
+            top: '0px', // ラジオボタンと文字を完全に揃えるために微調整
+            height: '20px', // 高さを統一
+            width: '20px', // 幅を統一
+          }}
+        />
+        {/* 文字とラジオボタンの間隔を個別に調整 */}
+        <span style={{ marginLeft: '5px' }}> {day}</span>
+      </label>
+    ))}
+  </div>
+</div>
 
-      {/* 時限の選択（ラジオボタン形式） */}
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="periodSelect" style={{
-            display: 'block',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backgroundColor: '#2e8b57',
-            padding: '5px',
-            marginBottom: '10px',
-            width: '100%'
-          }}>
-          時限 / Period
-        </label>
-        <div 
+
+{/* 時限の選択（ラジオボタン形式） */}
+<div style={{ marginBottom: '15px' }}>
+  <label
+    htmlFor="periodSelect"
+    style={{
+      display: 'block',
+      color: 'white',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      backgroundColor: '#2e8b57',
+      padding: '5px',
+      marginBottom: '10px',
+      width: '100%',
+    }}
+  >
+    時限 / Period
+  </label>
+  <div
+    style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: '10px',
+      width: '95%',
+      margin: '0 auto',
+      border: '2px solid white',
+      padding: '10px',
+      backgroundColor: 'white',
+      borderRadius: '5px',
+      alignItems: 'center', // 垂直方向の中央揃え
+    }}
+  >
+    {[
+      "1時限   /1stperiod",
+      "2時限   /2ndperiod",
+      "3時限   /3rdperiod",
+      "4時限   /4thperiod",
+      "5時限   /5thperiod",
+      "6時限   /6thperiod",
+      "7時限   /7thperiod",
+      "不 定  /NoSetClass",
+      "                 ", // 空白のラジオボタン
+    ].map((period) => (
+      <label
+        key={period}
+        style={{
+          display: 'flex',
+          alignItems: 'center', // ラジオボタンとテキストを垂直方向で中央揃え
+          justifyContent: 'center', // ラジオボタンとテキストを水平方向で中央揃え
+          fontWeight: 'bold',
+          color: 'gray',
+          width: '30%',
+          fontSize: fontSize,
+          height: '50px',
+          boxSizing: 'border-box',
+          position: 'relative',
+          textAlign: 'center', // 文字を中央揃え
+        }}
+      >
+        <input
+          type="radio"
+          value={period}
+          checked={searchTerm5 === period}
+          onChange={(e) => setSearchTerm5(e.target.value)}
           style={{
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            justifyContent: 'space-between', 
-            width: '70%', 
-            margin: '0 auto',
-            border: '2px solid white',  
-            padding: '10px', 
-            backgroundColor: 'white',  
-            borderRadius: '5px' 
-          }}>
-          {["1時限/1st period", "2時限/2nd period", "3時限/3rd period", "4時限/4th period", "5時限/5th period", "6時限/6th period", "7時限/7th period", "不定/No Set Class"].map(period => (
-            <label key={period} style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', color: 'gray', width: '30%', fontSize: fontSize }}>
-              <input
-                type="radio"
-                value={period}
-                checked={searchTerm5 === period}
-                onChange={(e) => setSearchTerm5(e.target.value)}
-                style={{ marginRight: '10px' }}
-              />
-              {period}
-            </label>
-          ))}
-        </div>
-      </div>
+            marginRight: '8px', // ラジオボタンとテキストの間隔を調整
+            verticalAlign: 'middle', // ラジオボタンとテキストを中央に揃える
+            display: period === "                 " && searchTerm5 !== "7時限   /7thperiod" ? 'none' : 'inline-block',
+            position: 'relative',
+            top: '0px', // ラジオボタンと文字を完全に揃えるために微調整
+            height: '20px', // 高さを統一
+            width: '20px', // 幅を統一
+          }}
+        />
+        {/* 文字とラジオボタンの間隔を個別に調整 */}
+        <span style={{ marginLeft: '5px' }}> {period}</span>
+      </label>
+    ))}
+  </div>
+</div>
+
+
+
 
      {/* 開講学部のプルダウンメニュー */}
 <div style={{ marginBottom: '15px' }}>
@@ -233,7 +319,7 @@ export const Search = () => {
       marginBottom: '10px',
       width: '100%'
     }}>
-    開講学部・学科 / Faculty / Department / Major
+    開講学部・学科 <br />  Faculty / Department / Major
   </label>
   <select
     id="departmentSelect"
@@ -300,8 +386,9 @@ export const Search = () => {
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
-            width: '50%',
+            justifyContent: 'center', // 中央寄りに配置
+            gap: '20px', // 選択肢間の間隔を設定
+            width: '95%',
             margin: '0 auto',
             border: '2px solid white',
             padding: '10px',
@@ -342,30 +429,32 @@ export const Search = () => {
       </div>
 
       {/* 検索ボタン */}
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '15px' }}>
         <button
           onClick={handleSearch}
           style={{
-            padding: '10px 20px',
+            padding: '5px 15px',
             backgroundColor: '#2e8b57',
             color: 'white',
             border: 'none',
-            borderRadius: '5px',
-            fontSize: '16px'
+            borderRadius: '100px',
+            fontSize: '12px'
           }}
         >
           検索 / Search
         </button>
       </div>
 
-      {/* 検索結果 */}
+
+   
+      {/* 検索結果 無くてもいいのでは？*/}
       <div style={{ color: 'white', textAlign: 'center' }}>
         {results.length > 0 ? (
           results.map((result, index) => <p key={index}>{result}</p>)
         ) : (
-          <p>該当する結果はありません。</p>
+          <p></p>
         )}
       </div>
     </div>
   );
-};
+};  
