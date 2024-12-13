@@ -1,346 +1,286 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { Box, Typography, Button, Link, FormControlLabel, Checkbox, Radio, RadioGroup } from '@mui/material';
 import { Header } from '../templates/Header';
+import { useNavigate } from 'react-router-dom';
+import { useSetup } from '../hooks/useSetup';
 
 export const Search = () => {
-  const [searchTerm1, setSearchTerm1] = useState('');
-  const [searchTerm2, setSearchTerm2] = useState('');
-  const [searchTerm3, setSearchTerm3] = useState(''); // 開講キャンパス用
-  const [searchTerm4, setSearchTerm4] = useState(''); // 曜日用
-  const [searchTerm5, setSearchTerm5] = useState(''); // 時限用
-  const [searchTerm6, setSearchTerm6] = useState(''); // 開講学部用
-  const [searchTerm7, setSearchTerm7] = useState(''); // 学期用
+  const DEPARTMENTS = [
+    "指定なし","青山スタンダード科目", "文学部共通", "文学部外国語科目", "英米文学科", "フランス文学科",
+    "比較芸術学科", "教育人間　外国語科目", "教育人間　教育学科", "教育人間　心理学科", "経済学部",
+    "法学部", "経営学部", "教職課程科目", "国際政治経済学部", "総合文化政策学部", "日本文学科",
+    "史学科", "理工学部共通", "物理科学", "数理サイエンス", "物理・数理", "電気電子工学科",
+    "機械創造", "経営システム", "情報テクノロジ－", "社会情報学部", "地球社会共生学部", "コミュニティ人間科学部",
+    "化学・生命"
+  ];
+
+  const SEMESTERS = [
+    "指定なし","前期", "通年", "後期", "後期前半", "後期後半", "通年隔１", "前期前半", "前期後半",
+    "通年隔２", "前期集中", "夏休集中", "集中", "春休集中", "後期集中", "前期隔２", "前期隔１",
+    "後期隔２", "後期隔１", "通年集中"
+  ];
+
+  const DAYS = ["月", "火", "水", "木", "金", "土", "不定"];
+  const PERIODS = ["１", "２", "３", "４", "５", "６"];
+
+
+  const [searchCriteria, setSearchCriteria] = useState({
+    days: [],
+    periods: [],
+    departments: [],
+    semesters: [],
+    courseName: "",
+    instructorName: ""
+  });
+
   const [results, setResults] = useState([]);
-  const fontSize = '14px'; // ここでフォントサイズを変更できます
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSearch = () => {
-    const data = [
-      'JavaScript 入門 - 山田先生',
-      'HTMLとCSSの基本 - 田中先生',
-      'Reactの使い方 - 鈴木先生',
-      'Web開発のベストプラクティス - 佐藤先生',
-      'CSSレイアウトのコツ - 伊藤先生'
-    ];
+  const navigate = useNavigate();
+  const { defCalendarInfo} = useSetup();
 
-    const filteredData = data.filter(item =>
-      item.toLowerCase().includes(searchTerm1.toLowerCase()) ||
-      item.toLowerCase().includes(searchTerm2.toLowerCase()) ||
-      item.toLowerCase().includes(searchTerm3.toLowerCase()) ||
-      item.toLowerCase().includes(searchTerm4.toLowerCase()) ||
-      item.toLowerCase().includes(searchTerm5.toLowerCase()) || // 時限
-      item.toLowerCase().includes(searchTerm6.toLowerCase()) ||
-      item.toLowerCase().includes(searchTerm7.toLowerCase()) // 学期
-    );
-
-    setResults(filteredData);
+  const handleCheckboxChange = (field, value) => {
+    setSearchCriteria((prev) => {
+      const currentValues = prev[field] || []; // currentValuesがundefinedの場合、空配列を使用
+      const updatedValues = currentValues.includes(value)
+        ? currentValues.filter((v) => v !== value)
+        : [...currentValues, value];
+      return { ...prev, [field]: updatedValues };
+    });
   };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchCriteria({ ...searchCriteria, [name]: value });
+  };
+
+  const handleRadioChange = (e) => {
+    setSearchCriteria({ ...searchCriteria, campus: e.target.value });
+  };
+
+  const handleSearch = async () => {
+    if (!defCalendarInfo) {
+      setError('デフォルトカレンダーの情報を取得できませんでした。');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      let combinedDayPeriod = [];
+      if (searchCriteria.days.length > 0 && searchCriteria.periods.length > 0) {
+        combinedDayPeriod = searchCriteria.days.flatMap((day) =>
+          searchCriteria.periods.map((period) => `${day}${period}`)
+        );
+      } else if (searchCriteria.days.length > 0) {
+        combinedDayPeriod = [...searchCriteria.days];
+      } else if (searchCriteria.periods.length > 0) {
+        combinedDayPeriod = [...searchCriteria.periods];
+      }
+
+      console.log("リクエスト送信:", {
+        ...searchCriteria,
+        dayPeriodCombinations: combinedDayPeriod,
+      });
+
+      const response = await axios.post(
+        'http://localhost:8000/search',
+        { ...searchCriteria, dayPeriodCombinations: combinedDayPeriod },
+        { params: { calendar_id: defCalendarInfo.id } }
+      );
+
+      setResults(response.data.results);
+    } catch (err) {
+      console.error("検索中にエラー:", err);
+      setError('検索中にエラーが発生しました。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatLectureMessage = (lecture) => (
+    <Box key={lecture.id} sx={{ backgroundColor: 'white', margin: '10px 0', padding: '10px', borderRadius: '5px' }}>
+      <Typography variant="body1">
+        <strong>講義名:</strong> {lecture.科目}
+      </Typography>
+      <Typography variant="body2">
+        <strong>時限:</strong> {lecture.時限}
+      </Typography>
+      <Typography variant="body2">
+        <strong>学年:</strong> {lecture.学年}
+      </Typography>
+      <Link href={lecture.url} target="_blank" rel="noopener" style={{ display: 'block', marginTop: '10px' }}>
+        シラバスを見る
+      </Link>
+      <Box sx={{ marginTop: 1 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() =>
+            navigate('/register-lecture', { state: { lecture } })
+          }
+        >
+          登録/解除
+        </Button>
+      </Box>
+    </Box>
+  );
 
   return (
     <div>
       <Header />
-    <div style={{ backgroundColor: '#8fbc8f', minHeight: '100vh', padding: '20px' }}>
-      <h1 style={{ color: 'white', textAlign: 'center' }}>時間割・講義内容検索</h1>
+      <div style={{ backgroundColor: '#8fbc8f', minHeight: '100vh', padding: '20px' }}>
+        <h1 style={{ color: 'white', textAlign: 'center', marginBottom: '20px' }}>時間割・講義内容検索</h1>
 
-      {/* 科目名の検索ボックス */}
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="subjectSearch" style={{
-            display: 'block',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backgroundColor: '#2e8b57',
-            padding: '5px',
-            marginBottom: '10px',
-            width: '100%'
-          }}>
-          科目名 / Course Title
-        </label>
-        <input
-          id="subjectSearch"
-          type="text"
-          placeholder="科目名を入力"
-          style={{
-            color: 'black',
-            width: '100%',
-            padding: '10px',
-            boxSizing: 'border-box'
-          }}
-          value={searchTerm1}
-          onChange={(e) => setSearchTerm1(e.target.value)}
-        />
-      </div>
+        <Box sx={{ marginBottom: '20px' }}>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>講義名 / Course Title</Typography>
+          <input
+            id="courseName"
+            type="text"
+            name="courseName"
+            placeholder="科目名を入力"
+            value={searchCriteria.courseName}
+            onChange={handleInputChange}
+            style={{
+              color: 'black',
+              width: '100%',
+              padding: '10px',
+              boxSizing: 'border-box',
+              borderRadius: '5px',
+              border: '1px solid #ccc'
+            }}
+          />
+        </Box>
 
-      {/* 教員名の検索ボックス */}
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="teacherSearch" style={{
-            display: 'block',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backgroundColor: '#2e8b57',
-            padding: '5px',
-            marginBottom: '10px',
-            width: '100%'
-          }}>
-          教員名 / Lecturer
-        </label>
-        <input
-          id="teacherSearch"
-          type="text"
-          placeholder="教員名を入力"
-          style={{
-            color: 'black',
-            width: '100%',
-            padding: '10px',
-            boxSizing: 'border-box'
-          }}
-          value={searchTerm2}
-          onChange={(e) => setSearchTerm2(e.target.value)}
-        />
-      </div>
+        <Box sx={{ marginBottom: '20px' }}>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>教員名 / Lecturer</Typography>
+          <input
+            id="instructorName"
+            type="text"
+            name="instructorName"
+            placeholder="教員名を入力"
+            value={searchCriteria.instructorName}
+            onChange={handleInputChange}
+            style={{
+              color: 'black',
+              width: '100%',
+              padding: '10px',
+              boxSizing: 'border-box',
+              borderRadius: '5px',
+              border: '1px solid #ccc'
+            }}
+          />
+        </Box>
 
-      {/* 開講キャンパスの選択 */}
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="campusSelect" style={{
-            display: 'block',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backgroundColor: '#2e8b57',
-            padding: '5px',
-            marginBottom: '10px',
-            width: '100%'
-          }}>
-          開講キャンパス / Campus
-        </label>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            width: '50%',
-            margin: '0 auto',
-            border: '2px solid white',
-            padding: '10px',
-            backgroundColor: 'white',
-            borderRadius: '5px'
-          }}>
-          <label style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', color: 'gray', fontSize: fontSize }}>
-            <input
-              type="radio"
-              value="青山キャンパス"
-              checked={searchTerm3 === "青山キャンパス"}
-              onChange={(e) => setSearchTerm3(e.target.value)}
-              style={{ marginRight: '10px' }}
+        <Box sx={{ marginBottom: '20px' }}>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>キャンパス / Campus</Typography>
+          <RadioGroup
+            row
+            value={searchCriteria.campus}
+            onChange={handleRadioChange}
+          >
+            <FormControlLabel value="青山" control={<Radio sx={{ color: 'white' }} />} label={<Typography style={{ color: 'white' }}>青山</Typography>} />
+            <FormControlLabel value="相模原" control={<Radio sx={{ color: 'white' }} />} label={<Typography style={{ color: 'white' }}>相模原</Typography>} />
+          </RadioGroup>
+        </Box>
+
+        <Box sx={{ marginBottom: '20px' }}>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>曜日</Typography>
+          {DAYS.map((day) => (
+            <FormControlLabel
+              key={day}
+              control={
+                <Checkbox
+                  checked={searchCriteria.days.includes(day)}
+                  onChange={() => handleCheckboxChange('days', day)}
+                  sx={{ color: 'white' }}
+                />
+              }
+              label={<Typography style={{ color: 'white' }}>{day}</Typography>}
             />
-            青山キャンパス
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', color: 'gray', fontSize: fontSize }}>
-            <input
-              type="radio"
-              value="相模原キャンパス"
-              checked={searchTerm3 === "相模原キャンパス"}
-              onChange={(e) => setSearchTerm3(e.target.value)}
-              style={{ marginRight: '10px' }}
-            />
-            相模原キャンパス
-          </label>
-        </div>
-      </div>
-
-      {/* 曜日の選択（ラジオボタン形式） */}
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="daySelect" style={{
-            display: 'block',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backgroundColor: '#2e8b57',
-            padding: '5px',
-            marginBottom: '10px',
-            width: '100%'
-          }}>
-          曜日 / Day
-        </label>
-        <div 
-          style={{
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            justifyContent: 'space-between', 
-            width: '70%', 
-            margin: '0 auto',
-            border: '2px solid white',  
-            padding: '10px', 
-            backgroundColor: 'white',  
-            borderRadius: '5px' 
-          }}>
-          {["月曜日/Monday", "火曜日/Tuesday", "水曜日/Wednesday", "木曜日/Thursday", "金曜日/Friday", "土曜日/Saturday", "不定/No Set Class"].map(day => (
-            <label key={day} style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', color: 'gray', width: '30%', fontSize: fontSize }}>
-              <input
-                type="radio"
-                value={day}
-                checked={searchTerm4 === day}
-                onChange={(e) => setSearchTerm4(e.target.value)}
-                style={{ marginRight: '10px' }}
-              />
-              {day}
-            </label>
           ))}
-        </div>
-      </div>
+        </Box>
 
-      {/* 時限の選択（ラジオボタン形式） */}
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="periodSelect" style={{
-            display: 'block',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backgroundColor: '#2e8b57',
-            padding: '5px',
-            marginBottom: '10px',
-            width: '100%'
-          }}>
-          時限 / Period
-        </label>
-        <div 
-          style={{
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            justifyContent: 'space-between', 
-            width: '70%', 
-            margin: '0 auto',
-            border: '2px solid white',  
-            padding: '10px', 
-            backgroundColor: 'white',  
-            borderRadius: '5px' 
-          }}>
-          {["1時限/1st period", "2時限/2nd period", "3時限/3rd period", "4時限/4th period", "5時限/5th period", "6時限/6th period", "7時限/7th period", "不定/No Set Class"].map(period => (
-            <label key={period} style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', color: 'gray', width: '30%', fontSize: fontSize }}>
-              <input
-                type="radio"
-                value={period}
-                checked={searchTerm5 === period}
-                onChange={(e) => setSearchTerm5(e.target.value)}
-                style={{ marginRight: '10px' }}
-              />
-              {period}
-            </label>
+        <Box sx={{ marginBottom: '20px' }}>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>時限</Typography>
+          {PERIODS.map((period) => (
+            <FormControlLabel
+              key={period}
+              control={
+                <Checkbox
+                  checked={searchCriteria.periods.includes(period)}
+                  onChange={() => handleCheckboxChange('periods', period)}
+                  sx={{ color: 'white' }}
+                />
+              }
+              label={<Typography style={{ color: 'white' }}>{period}</Typography>}
+            />
           ))}
-        </div>
-      </div>
+        </Box>
 
-      {/* 開講学部の検索ボックス */}
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="departmentSearch" style={{
-            display: 'block',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backgroundColor: '#2e8b57',
-            padding: '5px',
-            marginBottom: '10px',
-            width: '100%'
-          }}>
-          開講学部 / Department
-        </label>
-        <input
-          id="departmentSearch"
-          type="text"
-          placeholder="学部名を入力"
-          style={{
-            color: 'black',
-            width: '100%',
-            padding: '10px',
-            boxSizing: 'border-box'
-          }}
-          value={searchTerm6}
-          onChange={(e) => setSearchTerm6(e.target.value)}
-        />
-      </div>
+        <Box sx={{ marginBottom: '20px' }}>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>開講学部</Typography>
+          {DEPARTMENTS.map((dept) => (
+            <FormControlLabel
+              key={dept}
+              control={
+                <Checkbox
+                  checked={searchCriteria.departments.includes(dept)}
+                  onChange={() => handleCheckboxChange('departments', dept)}
+                  sx={{ color: 'white' }}
+                />
+              }
+              label={<Typography style={{ color: 'white' }}>{dept}</Typography>}
+            />
+          ))}
+        </Box>
 
-      {/* 学期の選択 */}
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="semesterSelect" style={{
-            display: 'block',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backgroundColor: '#2e8b57',
-            padding: '5px',
-            marginBottom: '10px',
-            width: '100%'
-          }}>
-          学期 / Semester
-        </label>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            width: '50%',
-            margin: '0 auto',
-            border: '2px solid white',
-            padding: '10px',
-            backgroundColor: 'white',
-            borderRadius: '5px'
-          }}>
-          <label style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', color: 'gray', fontSize: fontSize }}>
-            <input
-              type="radio"
-              value="通年"
-              checked={searchTerm7 === "通年"}
-              onChange={(e) => setSearchTerm7(e.target.value)}
-              style={{ marginRight: '10px' }}
+        <Box sx={{ marginBottom: '20px' }}>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>学期</Typography>
+          {SEMESTERS.map((sem) => (
+            <FormControlLabel
+              key={sem}
+              control={
+                <Checkbox
+                  checked={searchCriteria.semesters.includes(sem)}
+                  onChange={() => handleCheckboxChange('semesters', sem)}
+                  sx={{ color: 'white' }}
+                />
+              }
+              label={<Typography style={{ color: 'white' }}>{sem}</Typography>}
             />
-            通年
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', color: 'gray', fontSize: fontSize }}>
-            <input
-              type="radio"
-              value="前期"
-              checked={searchTerm7 === "前期"}
-              onChange={(e) => setSearchTerm7(e.target.value)}
-              style={{ marginRight: '10px' }}
-            />
-            前期
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', color: 'gray', fontSize: fontSize }}>
-            <input
-              type="radio"
-              value="後期"
-              checked={searchTerm7 === "後期"}
-              onChange={(e) => setSearchTerm7(e.target.value)}
-              style={{ marginRight: '10px' }}
-            />
-            後期
-          </label>
-        </div>
-      </div>
+          ))}
+        </Box>
 
-      {/* 検索ボタン */}
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <button
+        <Button
           onClick={handleSearch}
-          style={{
-            padding: '10px 20px',
+          disabled={loading}
+          variant="contained"
+          sx={{
             backgroundColor: '#2e8b57',
             color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            fontSize: '16px'
+            fontSize: '16px',
+            padding: '10px 20px',
+            borderRadius: '5px'
           }}
         >
-          検索 / Search
-        </button>
-      </div>
+          {loading ? '検索中...' : '検索 / Search'}
+        </Button>
 
-      {/* 検索結果 */}
-      <div style={{ color: 'white', textAlign: 'center' }}>
-        {results.length > 0 ? (
-          results.map((result, index) => <p key={index}>{result}</p>)
-        ) : (
-          <p>該当する結果はありません。</p>
-        )}
+        {error && <Typography style={{ color: 'red', marginTop: '20px' }}>{error}</Typography>}
+
+        <Box sx={{ marginTop: '30px' }}>
+          <Typography variant="h5" style={{ color: 'white', textAlign: 'center' }}>検索結果</Typography>
+          {results.length > 0 ? (
+            <div>{results.map(formatLectureMessage)}</div>
+          ) : (
+            <Typography style={{ color: 'white', textAlign: 'center' }}>結果がありません。</Typography>
+          )}
+        </Box>
       </div>
-    </div>
     </div>
   );
 };
