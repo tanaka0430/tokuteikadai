@@ -72,8 +72,8 @@ if __name__ == "__main__":
     db = next(get_db()) 
     question = str(input())
     
-    result = read_db(db,index_search(question))[0]#引数order_numは0～2、２の時は３番目
-    shajo_result = read_db(db,subset_search_batch(get_shakai_joho_id(db),question))[0]
+    result = read_db(db,index_search(question),0)[0]#引数order_numは0～2、２の時は３番目
+    shajo_result = read_db(db,subset_search_batch(get_shakai_joho_id(db),question),0)[0]
     
     result = AoyamaKougiBase.model_validate(result)
     shajo_result = AoyamaKougiBase.model_validate(shajo_result)

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Header } from '../templates/Header';
-import { TextField, Button, Box, Paper, Typography, Link } from '@mui/material';
+import { TextField, Button, Box, Paper, Typography, Link, Avatar } from '@mui/material';
 import axios from 'axios';
 
 export const Chat = () => {
@@ -134,3 +134,5 @@ export const Chat = () => {
     </Box>
   );
 };
+
+

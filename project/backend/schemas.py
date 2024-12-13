@@ -22,7 +22,8 @@ class AoyamaKougiBase(BaseModel):
     学年: str
     メッセージ: str
     url: str
-
+    is_registered: bool
+    
     class Config:
         from_attributes = True  
         
@@ -30,6 +31,19 @@ class SearchRequest(BaseModel):
     campuses: list[str] = []
     dayPeriodCombinations: list[str] = []
     departments: list[str] = []
-    semester: str = "指定なし"
+    semesters: list[str] = []
     courseName: str = ""
     instructorName: str = ""
+    
+class UserCalendarModel(BaseModel):
+    id: int  | None = None
+    user_id: int
+    calendar_name: str = ""
+    campus: list[str] = []
+    department: list[str] = []
+    semester: list[str] = []
+    sat_flag: bool = True
+    sixth_period_flag: bool = True
+    
+    class Config:
+        from_attributes = True 
