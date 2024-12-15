@@ -38,11 +38,6 @@ export default function BasicMenu() {
     handleClose();
   };
 
-  const handleClickTop = () => {
-    navigate("/timetable");
-    handleClose();
-  };
-
   const handleClickSearch = () => {
     navigate("/search");
     handleClose();
@@ -74,7 +69,6 @@ export default function BasicMenu() {
         }}
       >
         <MenuItem onClick={handleClickHome}>ホーム</MenuItem>
-        <MenuItem onClick={handleClickTop}>時間割</MenuItem>
         <MenuItem onClick={handleClickSearch}>講義検索</MenuItem>
         <MenuItem onClick={handleClickChat}>チャット検索</MenuItem>
         <MenuItem onClick={handleClickLogout}>ログアウト</MenuItem>

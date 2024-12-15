@@ -119,6 +119,15 @@ export const CalendarList = () => {
                                         </Button>
                                         <Button
                                             variant="outlined"
+                                            color="primary"
+                                            onClick={() => navigate('/calendar/create', { state: { calendarData: calendar } })}
+                                            fullWidth
+                                            sx={{ mb: 1 }}
+                                        >
+                                            編集
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
                                             color="error"
                                             onClick={() => handleDeleteCalendar(calendar.id)}
                                             disabled={loading}

@@ -255,20 +255,26 @@ export const Search = () => {
           ))}
         </Box>
 
-        <Button
-          onClick={handleSearch}
-          disabled={loading}
-          variant="contained"
-          sx={{
-            backgroundColor: '#2e8b57',
-            color: 'white',
-            fontSize: '16px',
-            padding: '10px 20px',
-            borderRadius: '5px'
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'center',
           }}
         >
-          {loading ? '検索中...' : '検索 / Search'}
-        </Button>
+          <Button
+            onClick={handleSearch}
+            disabled={loading}
+            variant="contained"
+            sx={{
+              backgroundColor: '#2e8b57',
+              color: 'white',
+              fontSize: '16px',
+              padding: '10px 20px',
+              borderRadius: '5px'
+            }}
+          >
+            {loading ? '検索中...' : '検索 / Search'}
+          </Button>
+        </Box>
 
         {error && <Typography style={{ color: 'red', marginTop: '20px' }}>{error}</Typography>}
 

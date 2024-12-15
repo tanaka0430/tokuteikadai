@@ -2,7 +2,6 @@ import './App.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Chat } from './components/pages/Chat';
 import { Home } from './components/pages/Home';
-import { Timetable } from './components/pages/Timetable';
 import { Search } from './components/pages/Search';
 import { Login } from './components/pages/Login';
 import { LoginFailed } from './components/pages/LoginFailed';
@@ -15,6 +14,7 @@ import { CalendarCreate } from './components/pages/CalendarCreate';
 import { CalendarList } from './components/pages/CalendarList';
 import { RegisterLecture } from './components/pages/RegisterLecture';
 import { ChatProvider } from './components/providers/ChatContext';
+
 function App() {
   return (
     <UserProvider>
@@ -31,7 +31,6 @@ function App() {
           {/* メイン機能 */}
           <Route path="/" element={<Home />} />
           <Route path="/chat" element={<Chat />} />
-          <Route path="/timetable" element={<Timetable />} />
           <Route path="/search" element={<Search />} />
           <Route path="/calendar/create" element={<CalendarCreate />} />
           <Route path="/calendar/list" element={<CalendarList />} />

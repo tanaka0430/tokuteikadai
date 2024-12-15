@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Header } from '../templates/Header';
 import { useSetup } from '../hooks/useSetup';
@@ -37,15 +37,19 @@ const SEMESTERS = [
 
 export const CalendarCreate = () => {
     const navigate = useNavigate();
+    const location = useLocation(); // 編集用のデータを受け取る
     const { userId } = useSetup();
 
+    // 初期データ (編集モードか作成モードか判断)
+    const isEditMode = location.state?.calendarData ? true : false;
     const [formData, setFormData] = useState({
-        calendar_name: '',
-        campus: '',
-        department: [],
-        semester: '',
-        sat_flag: false,
-        sixth_period_flag: false,
+        id: isEditMode ? location.state.calendarData.id : 0,
+        calendar_name: location.state?.calendarData?.calendar_name || '',
+        campus: location.state?.calendarData?.campus[0] || '',
+        department: location.state?.calendarData?.department || [],
+        semester: location.state?.calendarData?.semester[0] || '',
+        sat_flag: location.state?.calendarData?.sat_flag || false,
+        sixth_period_flag: location.state?.calendarData?.sixth_period_flag || false,
     });
 
     const handleChange = (e) => {
@@ -73,10 +77,11 @@ export const CalendarCreate = () => {
             alert('ユーザー情報が取得できませんでした。');
             return;
         }
-    
+
+        const mode = isEditMode ? 'u' : 'c'; // 作成か編集か
         // リクエストボディの作成
         const requestBody = {
-            id: 0, // カレンダー作成時はデフォルト値として 0 を設定
+            id: isEditMode ? formData.id : 0, // 編集時は既存のカレンダーIDを使用
             user_id: userId, // ユーザー ID を設定
             calendar_name: formData.calendar_name.trim() || "", // 必須フィールド（空白をトリム）
             campus: formData.campus ? [formData.campus] : [], // 単一値をリストに変換
@@ -89,15 +94,15 @@ export const CalendarCreate = () => {
         console.log('送信するリクエストボディ:', requestBody); // デバッグ用ログ
     
         try {
-            const response = await axios.post(
-                `http://127.0.0.1:8000/calendar/c-u/c`,
+            await axios.post(
+                `http://127.0.0.1:8000/calendar/c-u/${mode}`,
                 requestBody, // リクエストボディ
                 { headers: { "Content-Type": "application/json" }, withCredentials: true }
             );
-            console.log('カレンダー作成成功:', response.data);
-            navigate('/'); // 成功後にリダイレクト
+            alert(isEditMode ? 'カレンダーが更新されました。' : 'カレンダーが作成されました。');
+            navigate(isEditMode ? '/calendar/list' : '/'); // 成功後にリダイレクト
         } catch (error) {
-            console.error('カレンダー作成失敗:', error.response?.data || error);
+            console.error('カレンダー作成失敗:', error.response?.data || error)
     
             // APIからのエラー詳細を表示
             if (error.response?.data?.detail) {
@@ -221,7 +226,7 @@ export const CalendarCreate = () => {
                                     color="primary"
                                     style={{ width: '200px' }}
                                 >
-                                    作成
+                                    {isEditMode ? '更新' : '作成'}
                                 </Button>
                             </Grid>
                         </Grid>

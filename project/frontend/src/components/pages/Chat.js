@@ -104,6 +104,7 @@ export const Chat = () => {
         alignItems: 'center',
         height: '100vh',
         overflow: 'hidden',
+        backgroundColor: '#8fbc8f'
       }}
     >
       <Header />
