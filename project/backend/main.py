@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from openai_search import subset_search_batch,generate_input
 from crud import(
-    get_user,get_user_by_name,is_user_calendar_match,
+    get_user,get_user_by_name,
     create_user,filter_course_ids, read_db,
     get_matching_kougi_ids,insert_user_kougi,
     delete_user_kougi,calendar_list,get_user_kougi,
@@ -64,8 +64,7 @@ def get_session(session_id: str):
     if session_id is None:
         return None
     user_id = redis_client.get(session_id)
-    return user_id.decode("utf-8") if user_id else None
-
+    return int(user_id) if user_id else None
 
 def delete_session(session_id: str):
     redis_client.delete(session_id)
@@ -75,7 +74,7 @@ def get_userid(request: Request):
     if not get_session(session_id):
         return 0  
     else:
-        return get_session(session_id)
+        return int(get_session(session_id))
 
 @app.post("/users/register", response_model=User)
 def create_user_endpoint(user: UserCreate, db: Session = Depends(get_db)):
@@ -167,10 +166,15 @@ async def get_answer(request: Request,text: str,searchrequest: SearchRequest, ca
     answer = subset_search_batch(id_list,question)
     
     user_id = get_userid(request)
+    print(user_id)
     
     owner_id = get_calendar(calendar_id,db).user_id
-    if not is_user_calendar_match(owner_id,user_id):
+    print(owner_id)
+    
+    print(owner_id == user_id)
+    if not owner_id == user_id:
         calendar_id = 0
+    print(calendar_id)
     
     insert_chat(user_id,text,question,answer,db)
     kougi_summary = get_kougi_summary(answer,db)
@@ -195,7 +199,7 @@ async def search_courses(request: Request,searchrequest: SearchRequest, calendar
     user_id = get_userid(request)
     
     owner_id = get_calendar(calendar_id,db).user_id
-    if not is_user_calendar_match(owner_id,user_id):
+    if not owner_id == user_id:
         calendar_id = 0
     
     results = read_db(db,id_list,calendar_id)
@@ -210,13 +214,13 @@ def calendar_action_cu(request: Request, mode: str, calendar_data: UserCalendarM
     user_id = get_userid(request)
     try:
         if mode == "c":
-            if not is_user_calendar_match(calendar_data.user_id,user_id):
+            if not calendar_data.user_id == user_id:
                 return {"detail":"not login"}
             calendar = create_calendar(calendar_data,db)
             
         elif mode == "u":
             owner_id = get_calendar(calendar_data.id,db).user_id
-            if not is_user_calendar_match(owner_id,user_id):
+            if not owner_id == user_id:
                 return {"detail":"not login"}
             calendar = update_calendar(calendar_data,db)
             
@@ -241,7 +245,7 @@ def calendar_action_rd(request: Request, mode: str, user_id:int, calendar_id: in
             calendar = get_calendar(calendar_id, db)
         elif mode == "d":
             owner_id = get_calendar(calendar_id,db).user_id
-            if not is_user_calendar_match(owner_id,user_id):
+            if not owner_id == user_id:
                 return {"detail":"not login"}
             calendar = delete_calendar(calendar_id, db)
             calendar_id = None
@@ -272,7 +276,7 @@ def api_check_user_kougi(
     user_id = get_userid(request)
     
     owner_id = get_calendar(calendar_id,db).user_id
-    if not is_user_calendar_match(owner_id,user_id):
+    if not owner_id == user_id:
         return {"detail":"not login"}
             
     for kougi_id in kougi_ids:
@@ -305,7 +309,7 @@ def api_delete_user_kougi(
     user_id = get_userid(request)
     
     owner_id = get_calendar(calendar_id,db).user_id
-    if not is_user_calendar_match(owner_id,user_id):
+    if not owner_id == user_id:
         return {"detail":"not login"}
             
     for kougi_id in kougi_ids:

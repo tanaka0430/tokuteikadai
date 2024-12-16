@@ -242,11 +242,6 @@ def get_calendar(calendar_id: int, db: Session):
     #return calendar
     return UserCalendarModel.model_validate(calendar)
 
-def is_user_calendar_match(owner_id: int, user_id: int):
-    if owner_id is not None and owner_id == user_id:
-        return True
-    return False
-
 # ユーザーのdef_calendarを更新する関数
 def update_user_def_calendar(user_id: int,calendar_id: int, db: Session):
 
