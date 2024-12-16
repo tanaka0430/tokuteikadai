@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from openai_search import subset_search_batch,generate_input
 from crud import(
-    get_user,get_user_by_name,
+    get_user,get_user_by_name,is_user_calendar_match,
     create_user,filter_course_ids, read_db,
     get_matching_kougi_ids,insert_user_kougi,
     delete_user_kougi,calendar_list,get_user_kougi,
@@ -17,6 +17,8 @@ import sys
 import uvicorn
 import bcrypt
 import asyncio
+import redis
+import uuid
 
 Base.metadata.create_all(bind=engine)
 
@@ -24,8 +26,8 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    #allow_origins=["*"],
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
+    #allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -49,6 +51,31 @@ def verify_password(stored_hash: str, password: str) -> bool:
     # 入力されたパスワードとハッシュ化されたパスワードを照合
     return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
 
+# Redisクライアントの初期化
+redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+
+
+# セッションをRedisに保存する関数
+def store_session(session_id: str, user_id: int):
+    redis_client.setex(session_id, 86400, str(user_id))  # セッション有効期限を1日（86400秒）に設定
+
+# セッションをRedisから取得する関数
+def get_session(session_id: str):
+    if session_id is None:
+        return None
+    user_id = redis_client.get(session_id)
+    return user_id.decode("utf-8") if user_id else None
+
+
+def delete_session(session_id: str):
+    redis_client.delete(session_id)
+
+def get_userid(request: Request):
+    session_id = request.cookies.get("session_id")
+    if not get_session(session_id):
+        return 0  
+    else:
+        return get_session(session_id)
 
 @app.post("/users/register", response_model=User)
 def create_user_endpoint(user: UserCreate, db: Session = Depends(get_db)):
@@ -73,29 +100,36 @@ def read_user(
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # セッションIDをクッキーに保存
-    session_id = str(user.id)
+    session_id = str(uuid.uuid4())
+    
+    # セッションIDとユーザーIDをRedisに保存
+    store_session(session_id, user.id)
+    
     response.set_cookie(
         key="session_id",
         value=session_id,
         httponly=True,
         max_age=86400,  # クッキーの有効期限（1日）
-        samesite="None",
-        secure=True,
+        #samesite="None",
+        secure=False,
     )
     return user
 
 #ユーザー情報（ページ遷移後に毎回実行）
-@app.get("/users/info")
+@app.post("/users/info")
 def get_current_user(
     request: Request, 
     db: Session = Depends(get_db)
 ):
+    print(request.headers)
+    print(request.cookies)
     # クッキーからセッションIDを取得
     session_id = request.cookies.get("session_id")
     if not session_id:
+        print(session_id)
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    user_id = session_id
+    user_id = get_session(session_id)
     
     # データベースからユーザー情報を取得
     user = get_user(db,user_id)
@@ -115,7 +149,12 @@ def get_current_user(
 
 #ログアウト
 @app.post("/users/logout")
-def logout_user(response: Response):
+def logout_user(request: Request, response: Response):
+    session_id = request.cookies.get("session_id")
+    
+    if session_id:
+        delete_session(session_id)  # セッションをRedisから削除
+
     # セッションIDをクッキーから削除
     response.delete_cookie("session_id")
     return {"detail": "Logged out successfully"}
@@ -127,12 +166,11 @@ async def get_answer(request: Request,text: str,searchrequest: SearchRequest, ca
     question = generate_input(text)
     answer = subset_search_batch(id_list,question)
     
+    user_id = get_userid(request)
     
-    session_id = request.cookies.get("session_id")
-    if not session_id:
-        user_id = 0  
-    else:
-        user_id = session_id
+    owner_id = get_calendar(calendar_id,db).user_id
+    if not is_user_calendar_match(owner_id,user_id):
+        calendar_id = 0
     
     insert_chat(user_id,text,question,answer,db)
     kougi_summary = get_kougi_summary(answer,db)
@@ -151,9 +189,16 @@ def api_get_kougi_summary(kougi_ids: list[int], db: Session = Depends(get_db)):
 
 # シラバス検索
 @app.post("/search")
-async def search_courses(request: SearchRequest, calendar_id:int, db: Session = Depends(get_db)):
-    id_list = filter_course_ids(db, request)
-    results = read_db(db,id_list, calendar_id)
+async def search_courses(request: Request,searchrequest: SearchRequest, calendar_id:int, db: Session = Depends(get_db)):
+    id_list = filter_course_ids(db, searchrequest)
+    
+    user_id = get_userid(request)
+    
+    owner_id = get_calendar(calendar_id,db).user_id
+    if not is_user_calendar_match(owner_id,user_id):
+        calendar_id = 0
+    
+    results = read_db(db,id_list,calendar_id)
     print(sys.getrefcount(results)) 
     print(results)
     return {"results": results}
@@ -161,17 +206,25 @@ async def search_courses(request: SearchRequest, calendar_id:int, db: Session = 
 
 #カレンダー作成・更新
 @app.post("/calendar/c-u/{mode}")
-def calendar_action_cu(mode: str, calendar_data: UserCalendarModel, db: Session = Depends(get_db)):
+def calendar_action_cu(request: Request, mode: str, calendar_data: UserCalendarModel, db: Session = Depends(get_db)):
+    user_id = get_userid(request)
     try:
         if mode == "c":
+            if not is_user_calendar_match(calendar_data.user_id,user_id):
+                return {"detail":"not login"}
             calendar = create_calendar(calendar_data,db)
+            
         elif mode == "u":
+            owner_id = get_calendar(calendar_data.id,db).user_id
+            if not is_user_calendar_match(owner_id,user_id):
+                return {"detail":"not login"}
             calendar = update_calendar(calendar_data,db)
+            
         else:
             raise HTTPException(status_code=400, detail="Invalid mode")
         #printを消すとreturnが空になる。消さないこと。
         print(calendar)
-        update_user_def_calendar(calendar.user_id,calendar.id, db)
+        update_user_def_calendar(user_id,calendar.id, db)
         print(calendar)
         return {"calendar":calendar}
     
@@ -181,11 +234,15 @@ def calendar_action_cu(mode: str, calendar_data: UserCalendarModel, db: Session 
 
 #カレンダー参照・削除
 @app.post("/calendar/r-d/{mode}")
-def calendar_action_rd(mode: str, user_id:int, calendar_id: int, db: Session = Depends(get_db)):
+def calendar_action_rd(request: Request, mode: str, user_id:int, calendar_id: int, db: Session = Depends(get_db)):
+    user_id = get_userid(request)
     try:
         if mode == "r":
             calendar = get_calendar(calendar_id, db)
         elif mode == "d":
+            owner_id = get_calendar(calendar_id,db).user_id
+            if not is_user_calendar_match(owner_id,user_id):
+                return {"detail":"not login"}
             calendar = delete_calendar(calendar_id, db)
             calendar_id = None
         else:
@@ -204,6 +261,7 @@ def calendar_action_rd(mode: str, user_id:int, calendar_id: int, db: Session = D
 #講義登録
 @app.post("/kougi/insert")
 def api_check_user_kougi(
+    request: Request,
     kougi_ids: list[int],
     calendar_id: int,
     db: Session = Depends(get_db)  
@@ -211,6 +269,12 @@ def api_check_user_kougi(
     success = []
     failures = []
     errors = []
+    user_id = get_userid(request)
+    
+    owner_id = get_calendar(calendar_id,db).user_id
+    if not is_user_calendar_match(owner_id,user_id):
+        return {"detail":"not login"}
+            
     for kougi_id in kougi_ids:
         try:
             id_list = get_matching_kougi_ids(db, kougi_id, calendar_id)
@@ -233,10 +297,17 @@ def api_check_user_kougi(
 #講義削除
 @app.delete("/kougi/delete")
 def api_delete_user_kougi(
+    request: Request,
     kougi_ids: list[int],
     calendar_id: int,
     db: Session = Depends(get_db)
 ):
+    user_id = get_userid(request)
+    
+    owner_id = get_calendar(calendar_id,db).user_id
+    if not is_user_calendar_match(owner_id,user_id):
+        return {"detail":"not login"}
+            
     for kougi_id in kougi_ids:
         delete_user_kougi(db, kougi_id, calendar_id)
         
