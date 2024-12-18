@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
+const apiUrl = process.env.REACT_APP_API_URL;
 
 export const useRegister = () => {
     const navigate = useNavigate();
     const register = (user) => {
         console.log("登録処理開始");
-        const endpoint ="http://127.0.0.1:8000/users/register";
+        const endpoint =`${apiUrl}/users/register`;
         const queries = { name: user.username, password:user.password };
         axios.post(endpoint, queries).then((res)=>{
             console.log(res.data[0]);

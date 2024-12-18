@@ -20,6 +20,8 @@ import {
     Box,
 } from '@mui/material';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const CAMPUS = ["青山", "相模原"];
 const DEPARTMENTS = [
     "指定なし", "青山スタンダード科目", "文学部共通", "文学部外国語科目", "英米文学科", "フランス文学科",
@@ -95,7 +97,7 @@ export const CalendarCreate = () => {
     
         try {
             await axios.post(
-                `http://127.0.0.1:8000/calendar/c-u/${mode}`,
+                `${apiUrl}/calendar/c-u/${mode}`,
                 requestBody, // リクエストボディ
                 { headers: { "Content-Type": "application/json" }, withCredentials: true }
             );
