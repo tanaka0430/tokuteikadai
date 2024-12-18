@@ -1,4 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi.responses import HTMLResponse
+from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from openai_search import subset_search_batch,generate_input
@@ -19,20 +21,36 @@ import bcrypt
 import asyncio
 import redis
 import uuid
+from fastapi.exceptions import RequestValidationError
+from error_handlers import (
+    http_exception_handler,
+    integrity_error_handler,
+    operational_error_handler,
+    unhandled_exception_handler,
+)
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+origins = [
+    "https://agu-syllabus.ddo.jp",
+    "http://localhost",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    #allow_origins=["http://localhost:3000"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(IntegrityError, integrity_error_handler)
+app.add_exception_handler(OperationalError, operational_error_handler)
+app.add_exception_handler(Exception, unhandled_exception_handler)
 
 # Dependency
 def get_db():
@@ -109,13 +127,13 @@ def read_user(
         value=session_id,
         httponly=True,
         max_age=86400,  # クッキーの有効期限（1日）
-        #samesite="None",
-        secure=False,
+        samesite="None",
+        secure=True,
     )
     return user
 
 #ユーザー情報（ページ遷移後に毎回実行）
-@app.post("/users/info")
+@app.get("/users/info")
 def get_current_user(
     request: Request, 
     db: Session = Depends(get_db)
@@ -356,6 +374,64 @@ async def get_departments():
 @app.get("/semesters")
 async def get_semesters():
     return {"semesters": SEMESTERS}
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="agu-syllabus",
+        version="1.0.0",
+        description="agu-syllabus.ddo.jpのapi",
+        routes=app.routes,
+    )
+    # OpenAPIバージョンを明示的に設定
+    openapi_schema["openapi"] = "3.0.0"
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+# デフォルトのOpenAPI生成を上書き
+app.openapi = custom_openapi
+
+@app.get("/", response_class=HTMLResponse)
+async def get_swagger_ui():
+    # openapi_urlを取得
+    openapi_url = "https://agu-syllabus.ddo.jp/api/openapi.json"
+
+    if not openapi_url:
+        return HTMLResponse(content="OpenAPI URL is not available", status_code=500)
+
+    # HTMLテンプレート
+    html_template = """
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.css" />
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js"></script>
+    <script>
+        window.onload = function() {{
+            SwaggerUIBundle({{
+                url: "{openapi_url}",
+                dom_id: '#swagger-ui',
+                presets: [
+                    SwaggerUIBundle.presets.apis
+                ],
+                layout: "BaseLayout"
+            }});
+        }};
+    </script>
+</body>
+</html>
+"""
+    # format()を使用してopenapi_urlを挿入
+    html_content = html_template.format(openapi_url=openapi_url)
+
+    return HTMLResponse(content=html_content)
+
+
+
 
 
 async def start_uvicorn():
