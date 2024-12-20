@@ -4,6 +4,7 @@ import { Box, Typography, Button, Link, FormControlLabel, Checkbox, Radio, Radio
 import { Header } from '../templates/Header';
 import { useNavigate } from 'react-router-dom';
 import { useSetup } from '../hooks/useSetup';
+const apiUrl = process.env.REACT_APP_API_URL;
 
 export const Search = () => {
   const DEPARTMENTS = [
@@ -87,7 +88,7 @@ export const Search = () => {
       });
 
       const response = await axios.post(
-        'http://localhost:8000/search',
+        `${apiUrl}/search`,
         { ...searchCriteria, dayPeriodCombinations: combinedDayPeriod },
         { params: { calendar_id: defCalendarInfo.id } }
       );

@@ -36,7 +36,7 @@ app = FastAPI()
 
 origins = [
     "https://agu-syllabus.ddo.jp",
-    "http://localhost",
+    "http://localhost:3000",
 ]
 
 app.add_middleware(

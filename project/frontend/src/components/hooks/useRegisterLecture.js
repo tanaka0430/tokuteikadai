@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSetup } from './useSetup';
+const apiUrl = process.env.REACT_APP_API_URL;
 
 export const useRegisterLecture = () => {
   const [registeredLectures, setRegisteredLectures] = useState({}); // { [kougi_id]: true/false }
@@ -26,7 +27,7 @@ export const useRegisterLecture = () => {
   const registerLecture = async (kougi_id) => {
     try {
       await axios.post(
-        'http://127.0.0.1:8000/kougi/insert',
+        `${apiUrl}/kougi/insert`,
         [kougi_id],
         {
           params: { calendar_id: Number(calendarId) },
@@ -47,7 +48,7 @@ export const useRegisterLecture = () => {
   // 講義登録解除
   const unregisterLecture = async (kougi_id) => {
     try {
-      await axios.delete('http://127.0.0.1:8000/kougi/delete', {
+      await axios.delete(`${apiUrl}/kougi/delete`, {
         params: { calendar_id: Number(calendarId) },
         data: [kougi_id],
         headers: { 'Content-Type': 'application/json' },

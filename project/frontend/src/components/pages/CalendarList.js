@@ -12,6 +12,8 @@ import {
     CircularProgress,
 } from '@mui/material';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 export const CalendarList = () => {
     const navigate = useNavigate();
     const { userId } = useSetup(); // `userId`を取得
@@ -22,7 +24,7 @@ export const CalendarList = () => {
     useEffect(() => {
         const fetchCalendars = async () => {
             try {
-                const response = await axios.get("http://127.0.0.1:8000/users/info", {
+                const response = await axios.get(`${apiUrl}/users/info`, {
                     withCredentials: true,
                 });
                 setCalendarList(response.data.calendar_info);
@@ -39,7 +41,7 @@ export const CalendarList = () => {
         setLoading(true);
         try {
             const response = await axios.post(
-                `http://127.0.0.1:8000/calendar/r-d/r?user_id=${encodeURIComponent(userId)}&calendar_id=${encodeURIComponent(calendarId)}`,
+                `${apiUrl}/calendar/r-d/r?user_id=${encodeURIComponent(userId)}&calendar_id=${encodeURIComponent(calendarId)}`,
                 null, // ボディを送信しない
                 { headers: { "Content-Type": "application/json" } } // 必要に応じてヘッダーを指定
             );
@@ -70,7 +72,7 @@ export const CalendarList = () => {
         setLoading(true);
         try {
             const response = await axios.post(
-                `http://127.0.0.1:8000/calendar/r-d/d?user_id=${encodeURIComponent(userId)}&calendar_id=${encodeURIComponent(calendarId)}`,
+                `${apiUrl}/calendar/r-d/d?user_id=${encodeURIComponent(userId)}&calendar_id=${encodeURIComponent(calendarId)}`,
                 null, // ボディを送信しない
                 { headers: { "Content-Type": "application/json" } }
             );
