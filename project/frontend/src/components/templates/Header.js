@@ -3,14 +3,14 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { Grid } from '@mui/material';
-import { LoginUserContext } from '../providers/LoginUserProvider';
+import { UserContext } from '../providers/UserProvider';
 import BasicMenu from '../elements/BasicMenu';
 
 export const Header = () => {
-  const { loginUser } = useContext(LoginUserContext);
+  const { loginUser } = useContext(UserContext);
 
   return (
-    <AppBar position="static">
+    <AppBar position="sticky" elevation={0} sx={{ backgroundColor: '#00695c' }}>
       <Toolbar>
         <Grid container alignItems="center">
           {/* 左端にアイコンボタン (MENU) */}
@@ -21,7 +21,7 @@ export const Header = () => {
           {/* 中央にログインユーザー名を表示 */}
           <Grid item xs={8} textAlign="center">
             <Typography variant="h6" component="div">
-              ログインユーザ：{loginUser}
+              ログインユーザ：{loginUser.name}
             </Typography>
           </Grid>
 

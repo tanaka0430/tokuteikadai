@@ -5,7 +5,7 @@ export const useRegister = () => {
     const navigate = useNavigate();
     const register = (user) => {
         console.log("登録処理開始");
-        const endpoint ="http://127.0.0.1:8000/users";
+        const endpoint ="http://127.0.0.1:8000/users/register";
         const queries = { name: user.username, password:user.password };
         axios.post(endpoint, queries).then((res)=>{
             console.log(res.data[0]);

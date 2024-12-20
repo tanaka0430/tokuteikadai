@@ -1,3 +1,7 @@
 /project/backend/.env
 /project/backend/__pycache__/
 /myenv/
+/project/redis-stable/
+/project/redis-stable.tar.gz
+/project/frontend/.env
+/ssl/

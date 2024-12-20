@@ -1,8 +1,10 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_,text,and_
-from models import User,aoyama_kougi,user_kougi,user_calendar
+from models import User,aoyama_kougi,user_kougi,user_calendar,chat_log,aoyama_openai_emb
 from schemas import UserCreate,UserCalendarModel
 from fastapi import HTTPException
+from datetime import datetime
+import numpy as np
 
 def get_users(db:Session):
     return db.query(User).all()
@@ -19,6 +21,7 @@ def get_user_by_name_by_password(db:Session,name:str,password:str):
             .filter(User.password == password)
             .first()
     )
+    
 
 def create_user(db:Session,user:UserCreate):
     db_user = User(name=user.name,password=user.password)
@@ -239,7 +242,6 @@ def get_calendar(calendar_id: int, db: Session):
     #return calendar
     return UserCalendarModel.model_validate(calendar)
 
-
 # ユーザーのdef_calendarを更新する関数
 def update_user_def_calendar(user_id: int,calendar_id: int, db: Session):
 
@@ -247,7 +249,8 @@ def update_user_def_calendar(user_id: int,calendar_id: int, db: Session):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        print("not update def_calendar")
+        return None
 
     # def_calendarを更新
     user.def_calendar = calendar_id
@@ -261,3 +264,45 @@ def calendar_list(user_id: int, db: Session):
     calendar = db.query(user_calendar).filter(user_calendar.user_id == user_id).all()
     
     return calendar
+
+def insert_chat(user_id, user_input, generated_input, id_list,db):
+    """
+    chat_log テーブルに新規レコードを挿入する処理。
+
+    Parameters:
+        user_id (int): ユーザーID。
+        input (str): ユーザーからの入力。
+        generated_input (str): 生成された入力。
+        id_list (list): 生成されたIDのリスト (JSON形式)。
+        timestamp (datetime): ログのタイムスタンプ。
+        db (Session): SQLAlchemy セッション。
+
+    Returns:
+        chat_log: 挿入されたデータ。
+    """
+    
+    id_list = [int(i) if isinstance(i, np.int64) else i for i in id_list]
+
+    
+    # chat_log テーブル用の新しいレコードを作成
+    new_chat = chat_log(
+        user_id=user_id,
+        input=user_input,
+        generated_input=generated_input,
+        generated_idlist=id_list,
+        timestamp=datetime.now(),
+    )
+    db.add(new_chat)  # 新しいレコードを追加
+    db.commit()  # コミットして保存
+    db.refresh(new_chat)  # 挿入されたデータを取得
+    return new_chat
+    
+def get_kougi_summary(id_list,db):
+    if not id_list:
+        return []
+
+    # aoyama_kougi を取得
+    query = db.query(aoyama_openai_emb.aoyama_kougi_id,aoyama_openai_emb.audi_text).filter(aoyama_openai_emb.aoyama_kougi_id.in_(id_list))
+    results = query.all()
+    results_dict = [row._asdict() for row in results]
+    return results_dict

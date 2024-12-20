@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class UserBase(BaseModel):
     name:str = ""
@@ -36,7 +37,7 @@ class SearchRequest(BaseModel):
     instructorName: str = ""
     
 class UserCalendarModel(BaseModel):
-    id: int  | None = None
+    id: Optional[int]
     user_id: int
     calendar_name: str = ""
     campus: list[str] = []
