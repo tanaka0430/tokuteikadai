@@ -386,6 +386,10 @@ def custom_openapi():
     )
     # OpenAPIバージョンを明示的に設定
     openapi_schema["openapi"] = "3.0.0"
+    openapi_schema["servers"] = [
+        {"url": "https://agu-syllabus.ddo.jp/api"},
+        {"url":"http://localhost:8000"}
+    ]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
