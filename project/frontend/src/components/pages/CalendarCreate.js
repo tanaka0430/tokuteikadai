@@ -207,7 +207,7 @@ export const CalendarCreate = () => {
                                                 onChange={handleChange}
                                             />
                                         }
-                                        label="土曜授業"
+                                        label="土曜授業あり"
                                     />
                                     <FormControlLabel
                                         control={
@@ -217,7 +217,7 @@ export const CalendarCreate = () => {
                                                 onChange={handleChange}
                                             />
                                         }
-                                        label="6限目の有無"
+                                        label="6限目あり"
                                     />
                                 </FormGroup>
                             </Grid>
