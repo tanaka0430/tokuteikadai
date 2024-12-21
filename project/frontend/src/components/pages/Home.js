@@ -191,8 +191,8 @@ export const Home = () => {
                         </TableContainer>
                     </Box>
                 ) : (
-                    <Typography variant="body1" align="center" sx={{ color: 'white', mt: 4 }}>
-                        デフォルトカレンダーが設定されていません。
+                    <Typography variant="h4" align="center" sx={{ color: 'white', mt: 4 }}>
+                        未設定
                     </Typography>
                 )}
 

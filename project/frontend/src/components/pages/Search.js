@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Box, Typography, Button, Link, FormControlLabel, Checkbox, Radio, RadioGroup } from '@mui/material';
 import { Header } from '../templates/Header';
@@ -23,21 +23,35 @@ export const Search = () => {
   const PERIODS = ["１", "２", "３", "４", "５", "６"];
 
 
+  const { defCalendarInfo } = useSetup(); // defCalendarInfoを取得
   const [searchCriteria, setSearchCriteria] = useState({
     days: [],
     periods: [],
     departments: [],
     semesters: [],
-    courseName: "",
-    instructorName: ""
+    courseName: '',
+    instructorName: '',
+    campus: '',
   });
-
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate;
 
-  const navigate = useNavigate();
-  const { defCalendarInfo} = useSetup();
+  // defCalendarInfoが取得されたら初期条件を設定
+  useEffect(() => {
+    if (defCalendarInfo) {
+      setSearchCriteria({
+        days: [],
+        periods: [],
+        departments: defCalendarInfo.department || [],
+        semesters: defCalendarInfo.semester || [],
+        courseName: '',
+        instructorName: '',
+        campus: defCalendarInfo.campus || '',
+      });
+    }
+  }, [defCalendarInfo]);
 
   const handleCheckboxChange = (field, value) => {
     setSearchCriteria((prev) => {

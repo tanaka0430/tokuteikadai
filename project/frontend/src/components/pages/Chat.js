@@ -25,10 +25,10 @@ export const Chat = () => {
       const response = await axios.post(
         `http://localhost:8000/answer/${encodeURIComponent(userMessage)}`,
         {
-          campuses: [],
+          campuses: defCalendarInfo?.campus || [],
           dayPeriodCombinations: [],
-          departments: [],
-          semesters: [],
+          departments: defCalendarInfo?.department || [],
+          semesters: defCalendarInfo?.semester || [],
           courseName: '',
           instructorName: '',
         },
