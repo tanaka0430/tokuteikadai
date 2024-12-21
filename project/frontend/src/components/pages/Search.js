@@ -7,7 +7,7 @@ import { useSetup } from '../hooks/useSetup';
 
 export const Search = () => {
   const DEPARTMENTS = [
-    "指定なし","青山スタンダード科目", "文学部共通", "文学部外国語科目", "英米文学科", "フランス文学科",
+    "青山スタンダード科目", "文学部共通", "文学部外国語科目", "英米文学科", "フランス文学科",
     "比較芸術学科", "教育人間　外国語科目", "教育人間　教育学科", "教育人間　心理学科", "経済学部",
     "法学部", "経営学部", "教職課程科目", "国際政治経済学部", "総合文化政策学部", "日本文学科",
     "史学科", "理工学部共通", "物理科学", "数理サイエンス", "物理・数理", "電気電子工学科",
@@ -16,9 +16,7 @@ export const Search = () => {
   ];
 
   const SEMESTERS = [
-    "指定なし","前期", "通年", "後期", "後期前半", "後期後半", "通年隔１", "前期前半", "前期後半",
-    "通年隔２", "前期集中", "夏休集中", "集中", "春休集中", "後期集中", "前期隔２", "前期隔１",
-    "後期隔２", "後期隔１", "通年集中"
+    "指定なし","前期", "通年", "後期"
   ];
 
   const DAYS = ["月", "火", "水", "木", "金", "土", "不定"];
@@ -188,7 +186,7 @@ export const Search = () => {
         </Box>
 
         <Box sx={{ marginBottom: '20px' }}>
-          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>曜日</Typography>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>曜日 / Day</Typography>
           {DAYS.map((day) => (
             <FormControlLabel
               key={day}
@@ -205,7 +203,7 @@ export const Search = () => {
         </Box>
 
         <Box sx={{ marginBottom: '20px' }}>
-          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>時限</Typography>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>時限 / Period</Typography>
           {PERIODS.map((period) => (
             <FormControlLabel
               key={period}
@@ -222,7 +220,7 @@ export const Search = () => {
         </Box>
 
         <Box sx={{ marginBottom: '20px' }}>
-          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>開講学部</Typography>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>開講学部 / Faculty</Typography>
           {DEPARTMENTS.map((dept) => (
             <FormControlLabel
               key={dept}
@@ -239,7 +237,7 @@ export const Search = () => {
         </Box>
 
         <Box sx={{ marginBottom: '20px' }}>
-          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>学期</Typography>
+          <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>学期 / Semester</Typography>
           {SEMESTERS.map((sem) => (
             <FormControlLabel
               key={sem}

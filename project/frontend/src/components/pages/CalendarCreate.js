@@ -172,7 +172,7 @@ export const CalendarCreate = () => {
                                 <FormGroup
                                     style={{
                                         display: 'grid',
-                                        gridTemplateColumns: 'repeat(5, 1fr)',
+                                        gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', // 自動調整
                                         gap: '10px',
                                     }}
                                 >
@@ -196,6 +196,7 @@ export const CalendarCreate = () => {
                                 <Typography variant="subtitle1" gutterBottom>
                                     オプション設定
                                 </Typography>
+
                                 <FormGroup row>
                                     <FormControlLabel
                                         control={
@@ -205,7 +206,7 @@ export const CalendarCreate = () => {
                                                 onChange={handleChange}
                                             />
                                         }
-                                        label="土曜授業"
+                                        label="土曜授業あり"
                                     />
                                     <FormControlLabel
                                         control={
@@ -215,7 +216,7 @@ export const CalendarCreate = () => {
                                                 onChange={handleChange}
                                             />
                                         }
-                                        label="6限目の有無"
+                                        label="6時限目あり"
                                     />
                                 </FormGroup>
                             </Grid>
