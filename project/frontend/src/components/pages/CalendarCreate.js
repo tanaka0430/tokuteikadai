@@ -19,6 +19,7 @@ import {
     Paper,
     Box,
 } from '@mui/material';
+const apiUrl = process.env.REACT_APP_API_URL;
 
 const CAMPUS = ["青山", "相模原"];
 const DEPARTMENTS = [
@@ -93,7 +94,7 @@ export const CalendarCreate = () => {
     
         try {
             await axios.post(
-                `http://127.0.0.1:8000/calendar/c-u/${mode}`,
+                `${apiUrl}/calendar/c-u/${mode}`,
                 requestBody, // リクエストボディ
                 { headers: { "Content-Type": "application/json" }, withCredentials: true }
             );

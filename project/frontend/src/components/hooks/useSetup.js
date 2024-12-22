@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+const apiUrl = process.env.REACT_APP_API_URL;
 
 export const useSetup = () => {
     const [userId, setUserId] = useState(null);            // ユーザーID
@@ -11,7 +12,7 @@ export const useSetup = () => {
             try {
                 // "/users/info"からデータ取得
                 const userResponse = await axios.get(
-                  "http://127.0.0.1:8000/users/info",
+                    `${apiUrl}/users/info`,
                   {withCredentials: true }
                   );
                 
@@ -35,7 +36,7 @@ export const useSetup = () => {
 
                 // "/kougi/get/{calendar_id}"で講義情報を取得
                 const lectureResponse = await axios.post(
-                  `http://127.0.0.1:8000/kougi/get/${user_info.def_calendar}`,
+                  `${apiUrl}/kougi/get/${user_info.def_calendar}`,
                   { withCredentials: true }
               );
                 setLectureInfo(lectureResponse.data);

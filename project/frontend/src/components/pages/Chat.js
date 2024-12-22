@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useSetup } from '../hooks/useSetup';
 import { useNavigate } from 'react-router-dom';
 import { useChat } from '../providers/ChatContext'; // ChatContextをインポート
+const apiUrl = process.env.REACT_APP_API_URL;
 
 export const Chat = () => {
   const [userInput, setUserInput] = useState('');
@@ -31,7 +32,7 @@ export const Chat = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:8000/answer/${encodeURIComponent(userMessage)}`,
+        `${apiUrl}/answer/${encodeURIComponent(userMessage)}`,
         {
           campuses: defCalendarInfo?.campus || [],
           dayPeriodCombinations: [],

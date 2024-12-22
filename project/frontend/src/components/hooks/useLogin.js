@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import { UserContext } from '../providers/UserProvider';
+const apiUrl = process.env.REACT_APP_API_URL;
 
 export const useLogin = () => {
     const {setLoginUser, setIsLogined } = useContext(UserContext);
@@ -9,7 +10,7 @@ export const useLogin = () => {
     
     const login = (user) => {
         console.log("ログイン処理開始");
-        const endpoint ="http://127.0.0.1:8000/users/login";
+        const endpoint =`${apiUrl}/users/login`;
 
         axios.post(endpoint, null, {
             params: { name: user.username, password: user.password }, // クエリパラメータとして送信
