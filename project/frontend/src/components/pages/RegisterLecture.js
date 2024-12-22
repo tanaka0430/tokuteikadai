@@ -52,10 +52,18 @@ export const RegisterLecture = () => {
           <strong>時限:</strong> {lecture.時限}
         </Typography>
         <Typography variant="body1">
+          <strong>学部:</strong> {lecture.開講}
+        </Typography>
+        <Typography variant="body1">
+          <strong>教員:</strong> {lecture.教員}
+        </Typography>
+        <Typography variant="body1">
           <strong>学年:</strong> {lecture.学年}
         </Typography>
         <Typography variant="body1">
-          <strong>シラバス:</strong>{' '}
+          <strong>単位:</strong> {lecture.単位}
+        </Typography>
+        <Typography variant="body1">
           <a href={lecture.url} target="_blank" rel="noopener noreferrer" >
             詳細を見る
           </a>
