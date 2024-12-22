@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Box, Typography, Button, Link, FormControlLabel, Checkbox, Radio, RadioGroup } from '@mui/material';
 import { Header } from '../templates/Header';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSetup } from '../hooks/useSetup';
 
 export const Search = () => {
@@ -22,8 +22,10 @@ export const Search = () => {
   const DAYS = ["月", "火", "水", "木", "金", "土", "不定"];
   const PERIODS = ["１", "２", "３", "４", "５", "６"];
 
-
+  const navigate = useNavigate();
+  const location = useLocation();
   const { defCalendarInfo } = useSetup(); // defCalendarInfoを取得
+
   const [searchCriteria, setSearchCriteria] = useState({
     days: [],
     periods: [],
@@ -36,32 +38,30 @@ export const Search = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate;
 
-  // defCalendarInfoが取得されたら初期条件を設定
+  // 初期条件の設定
   useEffect(() => {
-    if (defCalendarInfo) {
-      setSearchCriteria({
-        days: [],
-        periods: [],
-        departments: defCalendarInfo.department || [],
-        semesters: defCalendarInfo.semester || [],
-        courseName: '',
-        instructorName: '',
-        campus: defCalendarInfo.campus || '',
-      });
+    if (defCalendarInfo || location.state) {
+        setSearchCriteria((prev) => ({
+            ...prev,
+            days: location.state?.days || [],
+            periods: location.state?.periods || [],
+            departments: defCalendarInfo?.department || [],
+            semesters: defCalendarInfo?.semester || [],
+            campus: defCalendarInfo?.campus || '',
+        }));
     }
-  }, [defCalendarInfo]);
+  }, [defCalendarInfo, location.state]);
 
-  const handleCheckboxChange = (field, value) => {
-    setSearchCriteria((prev) => {
-      const currentValues = prev[field] || []; // currentValuesがundefinedの場合、空配列を使用
-      const updatedValues = currentValues.includes(value)
-        ? currentValues.filter((v) => v !== value)
-        : [...currentValues, value];
-      return { ...prev, [field]: updatedValues };
-    });
-  };
+      const handleCheckboxChange = (field, value) => {
+        setSearchCriteria((prev) => {
+            const currentValues = prev[field] || [];
+            const updatedValues = currentValues.includes(value)
+                ? currentValues.filter((v) => v !== value)
+                : [...currentValues, value];
+            return { ...prev, [field]: updatedValues };
+        });
+    };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

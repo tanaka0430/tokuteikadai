@@ -1,24 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Button, Typography, Paper } from '@mui/material';
 import { useRegisterLecture } from '../hooks/useRegisterLecture';
 import { useSetup } from '../hooks/useSetup';
 
 export const RegisterLecture = () => {
-  const location = useLocation(); // Chat.jsから渡されたデータを取得
+  const location = useLocation();
   const navigate = useNavigate();
-  const { defCalendarInfo } = useSetup(); // デフォルトカレンダー情報を取得
+  const { defCalendarInfo } = useSetup();
   const { registerLecture, unregisterLecture, isLectureRegistered } =
     useRegisterLecture(defCalendarInfo);
 
-  const lecture = location.state?.lecture; // 遷移元で渡された講義情報
-  const registered = isLectureRegistered(lecture?.id); // 登録済みか確認
+  const lecture = location.state?.lecture;
+  const registered = isLectureRegistered(lecture?.id);
 
   const handleRegister = async () => {
     try {
-      await registerLecture(lecture.id);
-      alert(`「${lecture.科目}」を登録しました。`);
-      navigate(-1); // 戻る
+      const isFailure = await registerLecture(lecture.id);
+      if (isFailure) {
+        alert("この時限は他の講義が登録されています。");
+      } else {
+        alert(`「${lecture.科目}」を登録しました。`);
+        navigate(-1); // 戻る
+      }
     } catch (error) {
       console.error('登録失敗:', error);
       alert('登録に失敗しました。');
@@ -29,7 +33,7 @@ export const RegisterLecture = () => {
     try {
       await unregisterLecture(lecture.id);
       alert(`「${lecture.科目}」を解除しました。`);
-      navigate(-1); // 戻る
+      navigate(-1);
     } catch (error) {
       console.error('解除失敗:', error);
       alert('解除に失敗しました。');
@@ -66,11 +70,7 @@ export const RegisterLecture = () => {
           登録
         </Button>
       )}
-      <Button
-        variant="text"
-        onClick={() => navigate(-1)} // 戻るボタン
-        sx={{ marginLeft: 2 }}
-      >
+      <Button variant="text" onClick={() => navigate(-1)} sx={{ marginLeft: 2 }}>
         キャンセル
       </Button>
     </Box>

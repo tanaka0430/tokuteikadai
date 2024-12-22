@@ -50,9 +50,27 @@ export const Home = () => {
                 let content = '';
                 let lecture = null;
 
+                // 最初の列（時限列）の場合
                 if (j === 0) {
-                    content = `${i}限`;
+                    content = `${i}限`; // 時限表記
+                    cells.push(
+                        <TableCell
+                            key={`${i}-${j}`}
+                            align="center"
+                            sx={{
+                                backgroundColor: '#e0f7fa', // 薄い水色
+                                border: '1px solid #ddd',
+                                fontWeight: 'bold',
+                                padding: 0,
+                                maxWidth: '180px',
+                                maxHeight: '80px',
+                            }}
+                        >
+                            <Typography>{content}</Typography>
+                        </TableCell>
+                    );
                 } else {
+                    // 曜日・時限セルの場合
                     const day = days[j - 1];
                     const period = i.toString();
                     const buttonId = `${day}${period}`.replace(/\d/, (d) =>
@@ -61,22 +79,20 @@ export const Home = () => {
                     const lectureId = lectureMap[buttonId];
                     lecture = lectureDetails?.[lectureId];
                     content = lecture?.科目 || '－';
-                }
 
-                cells.push(
-                    <TableCell
-                        key={`${i}-${j}`}
-                        align="center"
-                        sx={{
-                            backgroundColor: 'white',
-                            border: '1px solid #ddd',
-                            padding: 0,
-                            maxWidth: '180px',
-                            maxHeight: '80px',
-                            overflow: 'hidden',
-                        }}
-                    >
-                        {j > 0 ? (
+                    cells.push(
+                        <TableCell
+                            key={`${i}-${j}`}
+                            align="center"
+                            sx={{
+                                backgroundColor: 'white',
+                                border: '1px solid #ddd',
+                                padding: 0,
+                                maxWidth: '180px',
+                                maxHeight: '80px',
+                                overflow: 'hidden',
+                            }}
+                        >
                             <Button
                                 fullWidth
                                 sx={{
@@ -88,19 +104,18 @@ export const Home = () => {
                                 variant="contained"
                                 color={lecture ? 'primary' : 'default'}
                                 onClick={() =>
-                                    lecture &&
-                                    navigate('/register-lecture', {
-                                        state: { lecture },
-                                    })
+                                    lecture
+                                        ? navigate('/register-lecture', { state: { lecture } })
+                                        : navigate('/search', {
+                                            state: { days: [day], periods: [period.toUpperCase()] },
+                                        })
                                 }
                             >
                                 {content}
                             </Button>
-                        ) : (
-                            <Typography>{content}</Typography>
-                        )}
-                    </TableCell>
-                );
+                        </TableCell>
+                    );
+                }
             }
             rows.push(<TableRow key={i}>{cells}</TableRow>);
         }
