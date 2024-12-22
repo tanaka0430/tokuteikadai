@@ -41,11 +41,19 @@ export const Search = () => {
 
   // 初期条件の設定
   useEffect(() => {
+    console.log("location.state:", location.state); // ログを追加
+
     if (defCalendarInfo || location.state) {
+      const formattedPeriods = location.state?.periods.map((period) =>
+        period.replace(/\d/, (d) => String.fromCharCode(d.charCodeAt(0) + 0xfee0))
+      );
+
+      console.log("formattedPeriods:", formattedPeriods); // フォーマット後のperiodsをログに出力
+
         setSearchCriteria((prev) => ({
             ...prev,
             days: location.state?.days || [],
-            periods: location.state?.periods || [],
+            periods: formattedPeriods || [],
             departments: defCalendarInfo?.department || [],
             semesters: defCalendarInfo?.semester || [],
             campus: defCalendarInfo?.campus || '',
