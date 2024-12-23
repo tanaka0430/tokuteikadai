@@ -13,8 +13,6 @@ import {
 } from '@mui/material';
 const apiUrl = process.env.REACT_APP_API_URL;
 
-const apiUrl = process.env.REACT_APP_API_URL;
-
 export const CalendarList = () => {
     const navigate = useNavigate();
     const { userId } = useSetup(); // `userId`を取得
