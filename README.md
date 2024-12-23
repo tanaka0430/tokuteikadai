@@ -59,11 +59,12 @@ http://agu-syllabus.ddo.jp/
 | Frontend          | JavaScript, React                                    |
 | Backend           | Python, FastAPI, Uvicorn, SQLAlchemy                 |
 | AI Services       | OpenAI API                                           |
-| Infrastructure    | Amazon Web Services, Nginx, Dynamic DO!.jp           |
-| Database          | MySQL, FAISS (Vector Database)                       |
-| Test              |                                                      |
-| Design            |                                                      |
-| etc.              |Git, GitHub                                           |
+| Infrastructure    | Amazon Web Services, Nginx                           |
+|                   | Let's Encrypt, Dynamic DO!.jp                        |
+| Database          | MySQL, FAISS (Vector Database), Redis                |
+| Test              | pytest                                               |
+| Design            | MUI                                                  |
+| etc.              | Git, GitHub                                          |
 
 <br />
 
