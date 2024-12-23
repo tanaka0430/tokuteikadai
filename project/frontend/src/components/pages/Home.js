@@ -145,23 +145,41 @@ export const Home = () => {
                     {defCalendarInfo?.calendar_name || 'ホーム画面'}
                 </Typography>
 
-                <Box sx={{ margin: 3, textAlign: 'center' }}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => navigate('/calendar/create')}
-                        sx={{ mr: 2 }}
-                    >
-                        新規カレンダー作成
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => navigate('/calendar/list')}
-                    >
-                        保存済みのカレンダー
-                    </Button>
-                </Box>
+                <Box
+                sx={{
+                    margin: 3,
+                    display: 'flex', // 横並びにする
+                    flexWrap: 'nowrap', // 折り返しを防止
+                    justifyContent: 'center', // 水平方向中央寄せ
+                    alignItems: 'center', // 垂直方向中央寄せ
+                    gap: 2, // ボタン間のスペース
+                }}
+            >
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate('/calendar/create')}
+                    sx={{
+                        flex: '1 0 auto', // サイズを調整
+                        minWidth: '150px', // ボタンの最低幅
+                        maxWidth: '200px',
+                    }}
+                >
+                    新規カレンダー作成
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate('/calendar/list')}
+                    sx={{
+                        flex: '1 0 auto',
+                        minWidth: '150px',
+                        maxWidth: '200px',
+                    }}
+                >
+                    保存済みのカレンダー
+                </Button>
+            </Box>
 
                 {defCalendarInfo ? (
                     <Box

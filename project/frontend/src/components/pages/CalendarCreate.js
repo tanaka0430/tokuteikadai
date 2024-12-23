@@ -21,7 +21,8 @@ import {
 } from '@mui/material';
 const apiUrl = process.env.REACT_APP_API_URL;
 
-const CAMPUS = ["青山", "相模原"];
+const CAMPUS = ["青山", "相模原" ];
+
 const DEPARTMENTS = [
     "指定なし", "青山スタンダード科目", "文学部共通", "文学部外国語科目", "英米文学科", "フランス文学科",
     "比較芸術学科", "教育人間　外国語科目", "教育人間　教育学科", "教育人間　心理学科", "経済学部",

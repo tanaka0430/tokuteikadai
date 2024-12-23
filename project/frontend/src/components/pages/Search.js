@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Typography, Button, Link, FormControlLabel, Checkbox, Radio, RadioGroup } from '@mui/material';
+import { Box, Typography, Button, Link, FormControlLabel, Checkbox } from '@mui/material';
 import { Header } from '../templates/Header';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSetup } from '../hooks/useSetup';
@@ -20,6 +20,8 @@ export const Search = () => {
     "指定なし","前期", "通年", "後期"
   ];
 
+  const CAMUPUSES = [ "青山", "相模原" ]
+
   const DAYS = ["月", "火", "水", "木", "金", "土", "不定"];
   const PERIODS = ["１", "２", "３", "４", "５", "６"];
 
@@ -34,7 +36,7 @@ export const Search = () => {
     semesters: [],
     courseName: '',
     instructorName: '',
-    campus: '',
+    campuses: [],
   });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -57,7 +59,7 @@ export const Search = () => {
             periods: formattedPeriods || [],
             departments: defCalendarInfo?.department || [],
             semesters: defCalendarInfo?.semester || [],
-            campus: defCalendarInfo?.campus || '',
+            campuses: defCalendarInfo?.campus || [],
         }));
     }
   }, [defCalendarInfo, location.state]);
@@ -75,10 +77,6 @@ export const Search = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setSearchCriteria({ ...searchCriteria, [name]: value });
-  };
-
-  const handleRadioChange = (e) => {
-    setSearchCriteria({ ...searchCriteria, campus: e.target.value });
   };
 
   const handleSearch = async () => {
@@ -198,14 +196,19 @@ export const Search = () => {
 
         <Box sx={{ marginBottom: '20px' }}>
           <Typography variant="h6" style={{ color: 'white', marginBottom: '10px' }}>キャンパス / Campus</Typography>
-          <RadioGroup
-            row
-            value={searchCriteria.campus}
-            onChange={handleRadioChange}
-          >
-            <FormControlLabel value="青山" control={<Radio sx={{ color: 'white' }} />} label={<Typography style={{ color: 'white' }}>青山</Typography>} />
-            <FormControlLabel value="相模原" control={<Radio sx={{ color: 'white' }} />} label={<Typography style={{ color: 'white' }}>相模原</Typography>} />
-          </RadioGroup>
+          {CAMUPUSES.map((campus) => (
+            <FormControlLabel
+              key={campus}
+              control={
+                <Checkbox
+                  checked={searchCriteria.campuses.includes(campus)}
+                  onChange={() => handleCheckboxChange('campus', campus)}
+                  sx={{ color: 'white' }}
+                />
+              }
+              label={<Typography style={{ color: 'white' }}>{campus}</Typography>}
+            />
+          ))}
         </Box>
 
         <Box sx={{ marginBottom: '20px' }}>
