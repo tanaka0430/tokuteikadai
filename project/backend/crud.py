@@ -21,6 +21,7 @@ def get_user_by_name_by_password(db:Session,name:str,password:str):
             .filter(User.password == password)
             .first()
     )
+    
 
 def create_user(db:Session,user:UserCreate):
     db_user = User(name=user.name,password=user.password)
@@ -241,7 +242,6 @@ def get_calendar(calendar_id: int, db: Session):
     #return calendar
     return UserCalendarModel.model_validate(calendar)
 
-
 # ユーザーのdef_calendarを更新する関数
 def update_user_def_calendar(user_id: int,calendar_id: int, db: Session):
 
@@ -249,7 +249,8 @@ def update_user_def_calendar(user_id: int,calendar_id: int, db: Session):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        print("not update def_calendar")
+        return None
 
     # def_calendarを更新
     user.def_calendar = calendar_id
