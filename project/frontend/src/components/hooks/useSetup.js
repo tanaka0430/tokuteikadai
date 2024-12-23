@@ -12,7 +12,7 @@ export const useSetup = () => {
             try {
                 // "/users/info"からデータ取得
                 const userResponse = await axios.get(
-                  `${apiUrl}/users/info`,
+                    `${apiUrl}/users/info`,
                   {withCredentials: true }
                   );
                 

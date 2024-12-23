@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Header } from '../templates/Header';
 import { TextField, Button, Box, Paper, Typography, Link, CircularProgress } from '@mui/material';
 import axios from 'axios';
@@ -13,6 +13,14 @@ export const Chat = () => {
   const { messages, setMessages } = useChat(); // グローバルなメッセージ状態を使用
   const { defCalendarInfo } = useSetup();
   const navigate = useNavigate();
+  const messagesEndRef = useRef(null); // スクロール用の参照
+
+  useEffect(() => {
+    // メッセージが追加されるたびに最下部にスクロール
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const handleSend = async () => {
     if (userInput.trim() === '') return;
@@ -26,10 +34,10 @@ export const Chat = () => {
       const response = await axios.post(
         `${apiUrl}/answer/${encodeURIComponent(userMessage)}`,
         {
-          campuses: [],
+          campuses: defCalendarInfo?.campus || [],
           dayPeriodCombinations: [],
-          departments: [],
-          semesters: [],
+          departments: defCalendarInfo?.department || [],
+          semesters: defCalendarInfo?.semester || [],
           courseName: '',
           instructorName: '',
         },
@@ -40,7 +48,7 @@ export const Chat = () => {
       );
 
       if (response.data?.results?.length > 0) {
-        response.data.results.forEach((lecture) => {
+        response.data.results.slice(0, 4).forEach((lecture) => {
           displayLecture(lecture);
         });
       } else {
@@ -112,7 +120,7 @@ export const Chat = () => {
       <Paper
         elevation={3}
         sx={{
-          width: '75%',
+          width: '85%',
           maxWidth: '800px',
           height: 'calc(100vh - 64px)',
           display: 'flex',
@@ -157,6 +165,7 @@ export const Chat = () => {
               </Box>
             ))
           )}
+          <div ref={messagesEndRef} />
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <TextField
