@@ -202,7 +202,7 @@ export const Search = () => {
               control={
                 <Checkbox
                   checked={searchCriteria.campuses.includes(campus)}
-                  onChange={() => handleCheckboxChange('campus', campus)}
+                  onChange={() => handleCheckboxChange('campuses', campus)}
                   sx={{ color: 'white' }}
                 />
               }
