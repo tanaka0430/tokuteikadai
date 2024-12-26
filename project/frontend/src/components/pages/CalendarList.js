@@ -11,7 +11,6 @@ import {
     Grid,
     CircularProgress,
 } from '@mui/material';
-
 const apiUrl = process.env.REACT_APP_API_URL;
 
 export const CalendarList = () => {

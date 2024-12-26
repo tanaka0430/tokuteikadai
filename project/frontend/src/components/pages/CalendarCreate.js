@@ -19,10 +19,10 @@ import {
     Paper,
     Box,
 } from '@mui/material';
-
 const apiUrl = process.env.REACT_APP_API_URL;
 
-const CAMPUS = ["青山", "相模原"];
+const CAMPUS = ["青山", "相模原" ];
+
 const DEPARTMENTS = [
     "指定なし", "青山スタンダード科目", "文学部共通", "文学部外国語科目", "英米文学科", "フランス文学科",
     "比較芸術学科", "教育人間　外国語科目", "教育人間　教育学科", "教育人間　心理学科", "経済学部",
@@ -32,9 +32,7 @@ const DEPARTMENTS = [
     "化学・生命"
 ];
 const SEMESTERS = [
-    "指定なし", "前期", "通年", "後期", "後期前半", "後期後半", "通年隔１", "前期前半", "前期後半",
-    "通年隔２", "前期集中", "夏休集中", "集中", "春休集中", "後期集中", "前期隔２", "前期隔１",
-    "後期隔２", "後期隔１", "通年集中"
+    "指定なし", "前期", "通年", "後期"
 ];
 
 export const CalendarCreate = () => {
@@ -174,7 +172,7 @@ export const CalendarCreate = () => {
                                 <FormGroup
                                     style={{
                                         display: 'grid',
-                                        gridTemplateColumns: 'repeat(5, 1fr)',
+                                        gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', // 自動調整
                                         gap: '10px',
                                     }}
                                 >
@@ -198,6 +196,7 @@ export const CalendarCreate = () => {
                                 <Typography variant="subtitle1" gutterBottom>
                                     オプション設定
                                 </Typography>
+
                                 <FormGroup row>
                                     <FormControlLabel
                                         control={
@@ -217,7 +216,7 @@ export const CalendarCreate = () => {
                                                 onChange={handleChange}
                                             />
                                         }
-                                        label="6限目あり"
+                                        label="6時限目あり"
                                     />
                                 </FormGroup>
                             </Grid>

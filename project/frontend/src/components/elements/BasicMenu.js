@@ -5,6 +5,7 @@ import MenuItem from "@mui/material/MenuItem";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
 import { useLogout } from "../hooks/useLogout";
+import { Typography } from "@mui/material";
 
 export default function BasicMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -71,7 +72,9 @@ export default function BasicMenu() {
         <MenuItem onClick={handleClickHome}>ホーム</MenuItem>
         <MenuItem onClick={handleClickSearch}>講義検索</MenuItem>
         <MenuItem onClick={handleClickChat}>チャット検索</MenuItem>
-        <MenuItem onClick={handleClickLogout}>ログアウト</MenuItem>
+        <MenuItem onClick={handleClickLogout}>
+        <Typography style={{color: 'red'}}>ログアウト</Typography>
+        </MenuItem>
       </Menu>
     </div>
   );
