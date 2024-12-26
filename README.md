@@ -17,8 +17,8 @@ http://agu-syllabus.ddo.jp/
     <th>ログイン画面</th>
   </tr>
   <tr>
-    <td><img src="" alt="ユーザー登録画面"></td>
-    <td><img src="" alt="ログイン画面"></td>
+    <td><img src="\docs\img\アプリ画面\ユーザー登録画面.png" alt="ユーザー登録画面"></td>
+    <td><img src="\docs\img\アプリ画面\ログイン画面.png" alt="ログイン画面"></td>
   </tr>
   <tr>
     <td>ログインIDとパスワードでのユーザー登録機能。IDは一意である必要がある。</td>
@@ -26,31 +26,43 @@ http://agu-syllabus.ddo.jp/
   </tr>
   <tr>
     <th>ホーム画面</th>
-    <th>カレンダー設定画面</th>
+    <th>時間割作成画面</th>
   </tr>
   <tr>
-    <td><img src="" alt="ホーム画面"></td>
-    <td><img src="" alt="カレンダー設定画面"></td>
+    <td><img src="\docs\img\アプリ画面\ホーム画面.png" alt="ホーム画面"></td>
+    <td><img src="\docs\img\アプリ画面\時間割作成画面.png" alt="時間割作成画面"></td>
   </tr>
   <tr>
     <td>登録した講義の確認や削除機能。</td>
-    <td>カレンダーの作成、更新、削除機能。</td>
+    <td>時間割の作成機能。</td>
+  </tr>
+    <tr>
+    <th>時間割設定更新画面</th>
+    <th>時間割一覧画面</th>
   </tr>
   <tr>
+    <td><img src="\docs\img\アプリ画面\時間割設定更新画面.png" alt="時間割設定更新画面"></td>
+    <td><img src="\docs\img\アプリ画面\時間割一覧画面.png" alt="時間割一覧画面"></td>
+  </tr>
+  <tr>
+    <td>時間割設定の更新機能。</td>
+    <td>時間割の指定、削除機能。</td>
+  </tr>
+  <tr>
+    <th>講義検索画面</th>
     <th>チャット検索画面</th>
-    <th>絞り込み検索画面</th>
   </tr>
   <tr>
-    <td><img src="" alt="チャット検索画面"></td>
-    <td><img src="" alt="絞り込み検索画面"></td>
+    <td><img src="\docs\img\アプリ画面\講義検索画面.png" alt="講義検索画面"></td>
+    <td><img src="\docs\img\アプリ画面\チャット検索画面.png" alt="チャット検索画面"></td>
   </tr>
   <tr>
-    <td>自然言語でのシラバス検索機能。</td>
     <td><a href="https://syllabus.aoyama.ac.jp/">本家のシラバス検索サイト</a>と同じように検索できる機能。</td>
+    <td>自然言語でのシラバス検索機能。</td>
   </tr>
 </table>
 
-画像は完成後に挿入
+
 <br />
 
 ##  主要技術
@@ -71,8 +83,6 @@ http://agu-syllabus.ddo.jp/
 ##  システム構成図
 
 ![システム構成図](/docs/img/awsシステム構成図.png)
-
-（実際の構成に合わせて修正する。画像の元データはgoogledriveにあり、編集できる。）
 
 <br />
 
@@ -96,7 +106,7 @@ http://agu-syllabus.ddo.jp/
 
 ## 自然言語検索の仕組み
 
-![後で作る]()
+![チャット検索の仕組み](\docs\img\チャット検索の仕組み.png)
 
 <br />
 
