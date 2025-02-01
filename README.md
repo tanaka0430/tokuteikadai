@@ -6,7 +6,7 @@
 <br />
 
 ##  アプリケーションのURL
-http://agu-syllabus.ddo.jp/
+https://agu-syllabus.ddo.jp/
 
 <br />
 
@@ -163,44 +163,183 @@ swaggerのAPI仕様書
 <br />
 
 ##  環境構築
-後で書く<br>
-git clone(/home/ec2-user/配下は注意)<br>
-apiのパス修正（変えてcommitすべきかも）<br>
+### nginx設定
+#### /etc/nginx/nginx.conf
+```nginx
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log notice;
+pid /run/nginx.pid;
 
-dumpでDB構築<br>
+include /usr/share/nginx/modules/*.conf;
 
-python pip install<br>
-myenv<br>
-requirements.txt<br>
-.env<br>
-nginx<br>
-　start<br>
-　設定ファイル<br>
-　権限（701）<br>
-node.js react<br>
-　スワップ領域<br>
-　npm install<br>
-　react build<br>
-uvicorn<br>
-　自動起動
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    include /etc/nginx/conf.d/*.conf;
+
+    server {
+        listen       80;
+        listen       [::]:80;
+        server_name  agu-syllabus.ddo.jp;
+
+        # HTTPからHTTPSへのリダイレクト
+        return 301 https://$host$request_uri;
+    }
+
+    server {
+        listen       443 ssl;
+        listen       [::]:443 ssl;
+        server_name  agu-syllabus.ddo.jp;
+
+        http2 on;
+        
+        # SSL証明書と鍵のパスを指定
+        ssl_certificate /etc/letsencrypt/live/agu-syllabus.ddo.jp/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/agu-syllabus.ddo.jp/privkey.pem;
+        
+        # SSL設定
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256';
+        ssl_prefer_server_ciphers on;
+
+        root         /home/ec2-user/tokuteikadai/project/frontend/build;
+        index        index.html index.htm;
+
+        location / {
+            try_files $uri /index.html;
+        }
+
+        # favicon.icoのリクエストを直接返す
+        location = /favicon.ico {
+            log_not_found off;
+            access_log off;
+        }
+
+        location /api/ {
+            proxy_pass http://localhost:8000/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # CORSを許可
+            add_header 'Access-Control-Allow-Origin' '*';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE';
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization';
+        }
+
+        location /.well-known/acme-challenge/ {
+            root /var/www/certbot;
+        }
+
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+}
+```
+<br>
 <br />
 
-##  注意事項
-#### スクレイピング
-後で書く<br>
-スクレイピングの順番<br>
-年度からむの追加<br>
-faiss_index.binは年度で絞ってから　
+### 自動起動設定
+#### /etc/systemd/system/redis.service
+```ini
+[Unit]
+Description=Redis In-Memory Data Store
+Documentation=man:redis-server(1)
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/redis-server /etc/redis/redis.conf
+ExecStop=/usr/local/bin/redis-server /etc/redis/redis.conf --shutdown
+Restart=always
+User=redis
+Group=redis
+LimitNOFILE=10032
+
+[Install]
+WantedBy=multi-user.target
+```
+
 <br />
 
-## 今後の展望（いらないかも）
+#### /etc/systemd/system/uvicorn.service
+```ini
+[Unit]
+Description=Uvicorn server for FastAPI app
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=/home/ec2-user/tokuteikadai/project/backend
+ExecStart=/home/ec2-user/tokuteikadai/myenv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=3
+Environment="PATH=/home/ec2-user/tokuteikadai/myenv/bin"
+
+[Install]
+WantedBy=multi-user.target
+
+```
+
 <br />
 
-## readmeを書くのに参考になるサイト（最後に消す）
-・https://zenn.dev/bloomer/articles/3f73f7d02e5a63
+### .env
+#### /home/ec2-user/tokuteikadai/project/backend/.env
+```ini
+DB_HOST='データベースのホスト名 (例: localhost)'
+DB_PORT='データベースのポート (例: 3306)'
+DB_USER='データベースのユーザー名'
+DB_PASSWORD='データベースのパスワード'
+DB_NAME='データベース名'
+OPENAI_API_KEY='OpenAI APIのキー'
+```
 
-・https://github.com/ren-ichinose/Accel
+<br />
 
-・https://www.whaletech.co.jp/blog/readme-markdown-1/
+#### /home/ec2-user/tokuteikadai/project/frontend/.env
+```ini
+# ローカルならhttp://localhost:8000
+REACT_APP_API_URL=https://agu-syllabus.ddo.jp/api
+```
+
+<br />
+
+##  注意事項・課題点
+・`/home/ec2-user/`に本リポジトリを配置してしまったので、`nginx` などのサービスと権限の問題が発生しやすい。<br>
+<br />
+
+・シラバスの更新に対応できていない。<br>
+→`aoyama_kougi`テーブルに年度カラムを追加して、idと年度の複合主キーとする必要がある。<br>
+→`aoyama_kougi`テーブルを呼び出すテーブルや関数も修正が必要。<br>
+→`faiss_index.bin`も年度ごとに作成する必要がある。<br>
+<br />
+
+・`npm install`に時間が掛かり過ぎるので、スワップ領域を設定する必要がある。<br>
+<br />
+
+・複数のクライアントが同時にAPIを呼び出すと処理に時間が掛かる。<br>
+→非同期処理を実装するべき。<br>
 
 <br />
