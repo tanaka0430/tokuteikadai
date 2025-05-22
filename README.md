@@ -153,7 +153,7 @@ https://agu-syllabus.ddo.jp/
 swaggerのAPI仕様書(サーバ起動中のみ)
 [https://agu-syllabus.ddo.jp/api/](https://agu-syllabus.ddo.jp/api/)
 
-もしくは（内容が少し古い）
+（内容が少し古い）
 [https://tanaka0430.github.io/tokuteikadai/](https://tanaka0430.github.io/tokuteikadai/)
 
 
