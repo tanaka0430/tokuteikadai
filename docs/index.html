@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インタラクティブAPIドキュメント</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Visualization & Content Choices:
+        - Report Info: APIエンドポイントのパスとメソッド -> Goal: APIの識別 -> Presentation: APIリスト内のアイテム、詳細表示時のヘッダー -> Interaction: クリックで詳細表示 -> Justification: 明確な識別と整理されたブラウジング -> Library/Method: HTML/Tailwind/JS.
+        - Report Info: APIの説明 -> Goal: APIの目的を理解 -> Presentation: テキストブロック -> Interaction: なし -> Justification: 直接的な情報提供 -> Library/Method: HTML/Tailwind.
+        - Report Info: リクエスト/レスポンスJSON -> Goal: データ構造の理解 -> Presentation: スタイル付けされた <pre><code> ブロック -> Interaction: クリップボードへコピーボタン -> Justification: 開発者の使いやすさ -> Library/Method: HTML/Tailwind/JS.
+        - Report Info: 利用シナリオ -> Goal: APIワークフローの理解 -> Presentation: エンドポイントへの言及を含む専用テキストセクション -> Interaction: ナビゲーション -> Justification: APIアプリケーションの文脈的理解 -> Library/Method: HTML/Tailwind/JS.
+        - APIエンドポイントのフィルタリング -> Goal: 関連APIを迅速に検索 -> Presentation: テキスト入力フィールド -> Interaction: 入力でリストをフィルタリング -> Justification: 大規模APIセットのナビゲーション改善 -> Library/Method: HTML/Tailwind/JS.
+        CONFIRMING NO SVG/Mermaid. このAPIドキュメントにチャートは適用不可。
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fdfbf6; }
+        .api-endpoint-item.active { background-color: #e0f2fe; }
+        .json-key { color: #9d174d; } /* Tailwind pink-700 */
+        .json-string { color: #166534; } /* Tailwind green-700 */
+        .json-number { color: #0284c7; } /* Tailwind sky-600 */
+        .json-boolean { color: #c2410c; } /* Tailwind orange-600 */
+        .json-null { color: #71717a; } /* Tailwind zinc-500 */
+        .nav-button.active {
+            background-color: #0ea5e9; /* sky-500 */
+            color: white;
+        }
+        .nav-button {
+            background-color: #f0f9ff; /* sky-50 */
+            color: #0c4a6e; /* sky-800 */
+        }
+        .sidebar {
+            height: calc(100vh - 4rem); /* Adjust based on header height */
+            overflow-y: auto;
+        }
+        .content-area {
+             height: calc(100vh - 4rem); /* Adjust based on header height */
+            overflow-y: auto;
+        }
+        .code-block-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #f8fafc; /* slate-50 */
+            border: 1px solid #e2e8f0; /* slate-200 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+    <header class="bg-sky-700 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-2xl font-bold mb-2 sm:mb-0">APIドキュメントビューア</h1>
+            <nav id="main-nav" class="flex space-x-2">
+                <button data-section="api-specs" class="nav-button active py-2 px-4 rounded-md font-semibold hover:bg-sky-600 hover:text-white transition-colors">API仕様詳細</button>
+                <button data-section="api-usage" class="nav-button py-2 px-4 rounded-md font-semibold hover:bg-sky-600 hover:text-white transition-colors">API利用シナリオ</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4">
+        <section id="api-specs-section" class="active-section">
+            <div class="mb-6 p-6 bg-white rounded-lg shadow">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-3">API仕様詳細へようこそ</h2>
+                <p class="text-gray-700 leading-relaxed">
+                    このセクションでは、利用可能な各APIエンドポイントの詳細な仕様を解説します。左側のナビゲーションからエンドポイントを選択すると、その概要、リクエストパラメータ、リクエストボディの形式、および期待されるレスポンスの例が表示されます。各コード例にはコピー機能も備わっており、開発作業を効率化します。APIの正確な動作を理解し、アプリケーションへの統合をスムーズに進めるためにご活用ください。
+                </p>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4">
+                <aside class="md:w-1/4 sidebar bg-white p-4 rounded-lg shadow">
+                    <input type="text" id="api-filter" placeholder="エンドポイントを検索..." class="w-full p-2 border border-gray-300 rounded-md mb-4 focus:ring-sky-500 focus:border-sky-500">
+                    <nav id="api-endpoint-nav" class="space-y-1"></nav>
+                </aside>
+                <div id="api-endpoint-detail" class="md:w-3/4 content-area bg-white p-6 rounded-lg shadow">
+                    <p class="text-gray-500">左側からAPIエンドポイントを選択してください。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="api-usage-section" class="hidden active-section">
+             <div class="mb-6 p-6 bg-white rounded-lg shadow">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-3">API利用シナリオへようこそ</h2>
+                <p class="text-gray-700 leading-relaxed">
+                    このセクションでは、提供されているAPIが実際のアプリケーションの各機能でどのように利用されるかの具体的なシナリオを紹介します。ユーザー登録から講義情報の検索、カレンダー管理に至るまで、各操作に対応するAPIエンドポイントとその連携方法を解説します。これらのシナリオを通じて、API群の全体像と効果的な活用法を理解し、より高度な機能実装にお役立てください。
+                </p>
+            </div>
+            <div id="api-usage-content" class="space-y-6"></div>
+        </section>
+    </main>
+
+    <script>
+        const apiData = [
+            {
+                id: "users-register",
+                method: "POST",
+                path: "/users/register",
+                summary: "新規ユーザーを登録する。",
+                request: {
+                    body: { name: "user", password: "pass" }
+                },
+                response: { name: "user", id: 3, is_active: true }
+            },
+            {
+                id: "users-login",
+                method: "POST",
+                path: "/users/login",
+                summary: "ユーザーを認証し、セッションIDをクッキーに保存する。",
+                request: {
+                    params: { name: "user", password: "pass" }
+                },
+                response: { name: "user", id: 3, is_active: true }
+            },
+            {
+                id: "users-info",
+                method: "GET",
+                path: "/users/info",
+                summary: "セッションIDを基に、ユーザー情報とカレンダー情報を取得する。",
+                request: { description: "cookieを参照するので、何かしらを設定する必要無し。\ncookieは現在1日で無くなる設定。" },
+                response: {
+                    user_info: { id: 3, name: "user", def_calendar: 21 },
+                    calendar_info: [
+                        { campus: [], id: 20, semester: ["後期"], sixth_period_flag: true, department: ["社会情報学部", "青山スタンダード科目"], user_id: 3, calendar_name: "３年後期（仮）", sat_flag: true },
+                        { campus: [], id: 21, semester: ["後期"], sixth_period_flag: true, department: ["社会情報学部", "青山スタンダード科目"], user_id: 3, calendar_name: "4年後期", sat_flag: true }
+                    ]
+                }
+            },
+            {
+                id: "users-logout",
+                method: "POST",
+                path: "/users/logout",
+                summary: "セッションIDをクッキーから削除する。",
+                request: { description: "無し。" },
+                response: { detail: "Logged out successfully" }
+            },
+            {
+                id: "answer-text",
+                method: "POST",
+                path: "/answer/{text}",
+                summary: "指定された条件とテキスト検索に基づいて講義データを取得する。",
+                request: {
+                    params: { text: "心理学の授業", calendar_id: "20" },
+                    body: { campuses: [], dayPeriodCombinations: [], departments: ["社会情報学部", "青山スタンダード科目"], semesters: ["後期"], courseName: "", instructorName: "" }
+                },
+                response: {
+                    results: [
+                        { id: 5965, "教員": "中村 直子", "開講": "青山スタンダード科目", "メッセージ": "", "単位": "2", "時限": "[青山]金２（後期）", "科目": "心理学Ｂ", "学年": "２～４", url: "https://syllabus.aoyama.ac.jp/shousai.ashx?YR=2024&FN=1611020-0693&KW=&BQ=3f5e5d46524048535c48584c4959336c647d22233127225448512b3e2e296c6f54714344415772021a1d495f401d180a02055e5d5f7b534f4c1f6564796b7b7114001004110803091c746c14131b070a0702061200101112161c081a08120c6253515b22535620564e3038565e5d5c5b5633274e36204751332e475d37304359cbc8bfa5c7d5b7bae7e7acc8dcb9b3e0feb7d5d1a5d7c9a7a5bfddd0dea0b8dbec9cc8c282f6f29a8ef9ed969e949789e0f28f86808790e7f18488828b", is_registered: false },
+                        { id: 7719, "教員": "清成 透子/\u200b香川 秀太/\u200b太田 礼穂", "開講": "社会情報学部", "メッセージ": "", "単位": "2", "時限": "[相模原]月２（後期）", "科目": "心理学演習", "学年": "２～４", url: "https://syllabus.aoyama.ac.jp/shousai.ashx?YR=2024&FN=4611810-0014&KW=&BQ=3f5e5d46524048535c48584c4959336c647d22233127225448512b3e2e296c6f54714344415772021a1d495f401d180a02055e5d5f7b534f4c1f6564796b7b7114001004110803091c746c14131b070a0702061200101112161c081a08120c6253515b22535620564e3038565e5d5c5b5633274e36204751332e475d37304359cbc8bfa5c7d5b7bae7e7acc8dcb9b3e0feb7d5d1a5d7c9a7a5bfddd0dea0b8dbec9cc8c282f6f29a8ef9ed969f959889e0f28f86808790e7f184898388", is_registered: false },
+                    ],
+                    comment: "// 残り７件返される"
+                }
+            },
+            {
+                id: "search",
+                method: "POST",
+                path: "/search",
+                summary: "指定された条件に合う講義を全て取得。",
+                request: {
+                    params: { calendar_id: 20 },
+                    body: { campuses: [], dayPeriodCombinations: ["木３"], departments: ["社会情報学部", "青山スタンダード科目"], semesters: ["後期"], courseName: "", instructorName: "居駒" }
+                },
+                response: {
+                    results: [
+                        { id: 9447, "教員": "大林 真也/\u200b宮川 裕之/\u200b伊藤 由樹子/\u200b太田 礼穂/\u200b居駒 幹夫/\u200b勝村 史昭", "開講": "社会情報学部", "メッセージ": "（２０２３年度以前入学者用）", "単位": "2", "時限": "[相模原]木３（後期）", "科目": "プロジェクト演習Ⅱ", "学年": "３～４", url: "https://syllabus.aoyama.ac.jp/shousai.ashx?YR=2024&FN=4611810-0144&KW=&BQ=3f5e5d46524048535c48584c4959336c647d22233127225448512b3e2e296c6f54714344415772021a1d495f401d180a02055e5d5f7b534f4c1f6564796b7b7114001004110803091c746c14131b070a0702061200101112161c081a08120c6253515b22535620564e3038565e5d5c5b5633274e36204751332e475d37304359cbc8bfa5c7d5b7bae7e7acc8dcb9b3e0feb7d5d1a5d7c9a7a5bfddd0dea0b8dbec9cc8c282f6f29a8ef9ed96989a9d89e0f28f86808790e7f1848e8c8d", is_registered: true }
+                    ]
+                }
+            },
+            {
+                id: "calendar-cu",
+                method: "POST", // POST for 'c', PUT for 'u' (using POST for both based on unified endpoint)
+                path: "/calendar/c-u/{mode}",
+                summary: "カレンダーを作成(c)または更新(u)する。",
+                request: {
+                    create_params: { mode: "c" },
+                    create_body: { id: 0, user_id: 3, calendar_name: "３年後期", campus: ["相模原"], department: ["社会情報学部", "青山スタンダード科目"], semester: ["後期"], sat_flag: true, sixth_period_flag: false },
+                    update_params: { mode: "u" },
+                    update_body: { id: 20, user_id: 3, calendar_name: "３年後期（仮）", campus: [], department: ["社会情報学部", "青山スタンダード科目"], semester: ["後期"], sat_flag: true, sixth_period_flag: true }
+                },
+                response: {
+                    create_response: { calendar: { campus: ["相模原"], id: 20, semester: ["後期"], sixth_period_flag: false, sat_flag: true, user_id: 3, calendar_name: "３年後期", department: ["社会情報学部", "青山スタンダード科目"] } },
+                    update_response: { calendar: { campus: [], id: 20, semester: ["後期"], sixth_period_flag: true, sat_flag: true, user_id: 3, calendar_name: "３年後期（仮）", department: ["社会情報学部", "青山スタンダード科目"] } }
+                }
+            },
+            {
+                id: "calendar-rd",
+                method: "GET/DELETE", // GET for 'r', DELETE for 'd'
+                path: "/calendar/r-d/{mode}",
+                summary: "カレンダーを参照(r)または削除(d)する。",
+                request: {
+                    read_params: { mode: "r", user_id: "3", calendar_id: "21" },
+                    delete_params: { mode: "d", user_id: "3", calendar_id: "21" }
+                },
+                response: {
+                    read_response: { calendar: { id: 21, user_id: 3, calendar_name: "4年後期", campus: [], department: ["社会情報学部", "青山スタンダード科目"], semester: ["後期"], sat_flag: true, sixth_period_flag: true } },
+                    delete_response: { calendar: null }
+                }
+            },
+            {
+                id: "kougi-insert",
+                method: "POST",
+                path: "/kougi/insert",
+                summary: "カレンダーに講義を登録する。",
+                request: {
+                    params: { calendar_id: "20" },
+                    body: [9445]
+                },
+                response: {
+                    success: [],
+                    failures: [{ kougi_id: 9445, obstacles: [{ id: 9447, "教員": "大林 真也/\u200b宮川 裕之/\u200b伊藤 由樹子/\u200b太田 礼穂/\u200b居駒 幹夫/\u200b勝村 史昭", "開講": "社会情報学部", "メッセージ": "（２０２３年度以前入学者用）", "単位": "2", "時限": "[相模原]木３（後期）", "科目": "プロジェクト演習Ⅱ", "学年": "３～４", url: "https://syllabus.aoyama.ac.jp/shousai.ashx?YR=2024&FN=4611810-0144&KW=&BQ=3f5e5d46524048535c48584c4959336c647d22233127225448512b3e2e296c6f54714344415772021a1d495f401d180a02055e5d5f7b534f4c1f6564796b7b7114001004110803091c746c14131b070a0702061200101112161c081a08120c6253515b22535620564e3038565e5d5c5b5633274e36204751332e475d37304359cbc8bfa5c7d5b7bae7e7acc8dcb9b3e0feb7d5d1a5d7c9a7a5bfddd0dea0b8dbec9cc8c282f6f29a8ef9ed96989a9d89e0f28f86808790e7f1848e8c8d", is_registered: true }] }],
+                    errors: []
+                }
+            },
+            {
+                id: "kougi-delete",
+                method: "POST", // Or DELETE, but body implies POST
+                path: "/kougi/delete",
+                summary: "カレンダーから講義を削除する。",
+                request: {
+                    params: { calendar_id: "20" },
+                    body: [9447]
+                },
+                response: { message: "Data deleted successfully" }
+            },
+            {
+                id: "kougi-get",
+                method: "GET",
+                path: "/kougi/get/{calendar_id}",
+                summary: "カレンダーに登録済みの講義を取得する。",
+                request: {
+                    params: { calendar_id: "20" }
+                },
+                response: {
+                    registered_user_kougi: [{ kougi_id: 9447, period: "木３", calendar_id: 20 }],
+                    results: [{ id: 9447, "教員": "大林 真也/\u200b宮川 裕之/\u200b伊藤 由樹子/\u200b太田 礼穂/\u200b居駒 幹夫/\u200b勝村 史昭", "開講": "社会情報学部", "メッセージ": "（２０２３年度以前入学者用）", "単位": "2", "時限": "[相模原]木３（後期）", "科目": "プロジェクト演習Ⅱ", "学年": "３～４", url: "https://syllabus.aoyama.ac.jp/shousai.ashx?YR=2024&FN=4611810-0144&KW=&BQ=3f5e5d46524048535c48584c4959336c647d22233127225448512b3e2e296c6f54714344415772021a1d495f401d180a02055e5d5f7b534f4c1f6564796b7b7114001004110803091c746c14131b070a0702061200101112161c081a08120c6253515b22535620564e3038565e5d5c5b5633274e36204751332e475d37304359cbc8bfa5c7d5b7bae7e7acc8dcb9b3e0feb7d5d1a5d7c9a7a5bfddd0dea0b8dbec9cc8c282f6f29a8ef9ed96989a9d89e0f28f86808790e7f1848e8c8d", is_registered: true }]
+                }
+            }
+        ];
+
+        const usageScenarios = [
+            {
+                title: "ユーザー登録",
+                description: "`/users/register` で登録。",
+                apis: ["/users/register"]
+            },
+            {
+                title: "ログイン",
+                description: "`/users/login` でログイン。",
+                apis: ["/users/login"]
+            },
+            {
+                title: "ログアウト",
+                description: "`/users/logout` でログアウト。",
+                apis: ["/users/logout"]
+            },
+            {
+                title: "ユーザー情報取得",
+                description: "`/users/info` を呼び出し、ユーザー名などを取得する。\nなおこの操作はログイン画面、ユーザー登録画面を除く全てのページで最初に実行しておくことを推奨。",
+                apis: ["/users/info"]
+            },
+            {
+                title: "ホームセットアップ",
+                description: "`/users/info` のレスポンスを基に、\n`user_info.def_calendar`がnullでないならそのカレンダーを表示する。\nカレンダーの設定情報は `/users/info` の `calendar_info.id == user_info.def_calendar` の `calendar_info`で取得する。（以降この値をdef_calendar_infoとする）\nカレンダーに登録されている講義のやその詳細は、\n`/kougi/get/{calendar_id}`で取得する（`calendar_id == user_info.def_calendar`）。\n`registered_user_kougi.period`で講義の位置を取得し、`results`で講義の詳細を取得する。",
+                apis: ["/users/info", "/kougi/get/{calendar_id}"]
+            },
+            {
+                title: "カレンダー新規作成",
+                description: "ホーム画面のカレンダー作成ボタンから設定入力画面を表示する。\n設定項目はUserCalendarModelを参考にする。\n設定入力画面の作成ボタンを押下したら、設定項目を`/calendar/c-u/c`に送信。\n（mode = cの時はUserCalendarModelのidは無視して実行されるので設定不要）\n成功すればカレンダーの作成、def_calendarの変更が実行される。\nレスポンスは作成したカレンダーのUserCalendarModel。",
+                apis: ["/calendar/c-u/{mode}"]
+            },
+            {
+                title: "カレンダー更新",
+                description: "ホーム画面のカレンダー設定ボタンから設定入力画面を表示する。\n設定項目はUserCalendarModelを参考にする。\n設定入力画面の決定ボタン（新規作成の作成ボタンと同じ）を押下したら、設定項目を`/calendar/c-u/u`に送信。\n成功すればカレンダーの作成、def_calendarの変更が実行される。\nレスポンスは作成したカレンダーのUserCalendarModel。",
+                apis: ["/calendar/c-u/{mode}"]
+            },
+            {
+                title: "カレンダー選択",
+                description: "ホーム画面のカレンダー一覧画面からカレンダーを選択したら、\n選択したカレンダーのIDを`/calendar/r-d/r`に渡して送信。\n成功すればdef_calendarの変更が実行される。\nこれによりホームセットアップ時に選択したカレンダーが表示される。",
+                apis: ["/calendar/r-d/{mode}"]
+            },
+            {
+                title: "カレンダー削除",
+                description: "ホーム画面のカレンダー設定ボタンから設定入力画面を表示する。\n設定入力画面の削除ボタンを押下したら、\n選択したカレンダーのIDを`/calendar/r-d/d`に渡して送信。\n成功すればdef_calendarの値はnullになる。",
+                apis: ["/calendar/r-d/{mode}"]
+            },
+            {
+                title: "チャット検索（直接）",
+                description: "チャット画面で文章を入力して送信ボタンを押下したら、\n`/answer/{text}`を`{text}`に文章を格納した状態で送信。\n`/answer/{text}`のリクエストには`request: SearchRequest`が必要だが、\n全ての値を空の状態で渡す。\n（単純検索画面と同じ機能をつけるか、\nもしくはチャット画面と単純検索画面を統合して、\n自由に検索条件を設定できるようにしてもよいかもしれない。）\n`calendar_id`は`/users/info`の`user_info.def_calendar`を渡す。\n成功すれば上位９件の講義情報が返ってくる。",
+                apis: ["/answer/{text}", "/users/info"]
+            },
+            {
+                title: "チャット検索（カレンダーのコマから）",
+                description: "直接に対して、`request: SearchRequest`の値を設定する必要がある。\n`SearchRequest`の\n`campuses`,`departments`,`semesters`については、\n `/users/info`の`def_calendar_info`から共通するものを渡す\n（`def_calendar_info`のインデックスには末尾のsが無いので注意）。\n`dayPeriodCombinations`については、\nホーム画面からコマを選択してチャット画面に遷移する際に、\n“月1”や”金”のような値を遷移先のチャット画面に渡して設定する。\n“月1”や”金”などは、htmlで各コマのinputタグのvalueに設定しておくとよい。\n他の値は空でよい。\n後は直接と同じ。",
+                apis: ["/answer/{text}", "/users/info"]
+            },
+            {
+                title: "単純検索（直接）",
+                description: "単純検索画面で条件を指定し検索ボタンを押下したら、\n`/search`を送信。\n`/search`のリクエストは`/answer/{text}`の`{text}`が無いものと同じで、\nチャット検索（直接）を参考に設定する。\nただしレスポンスは、対象の講義情報が全件返される。",
+                apis: ["/search"]
+            },
+            {
+                title: "単純検索（カレンダーのコマから）",
+                description: "単純検索（直接）のリクエストに対して、チャット検索（カレンダーのコマから）を参考にすればよい。\nただ、単純検索画面に遷移後のフィールドのデフォルト値を、SearchRequestの値にしておく。\n（直接の場合、遷移直後のSearchRequestは値が空なので、区別して実装しなくてよい）",
+                apis: ["/search"]
+            },
+            {
+                title: "講義登録",
+                description: "チャット検索や単純検索で返ってきた講義にある登録ボタンを押下した時、\n`/kougi/insert`を送信する。\n登録ボタンは返ってきた講義の`is_registered`が`false`の時に設定する。\n`true`の時は登録解除ボタンにする。\n`/kougi/insert`のリクエストに必要な`kougi_ids`には、\n登録したい講義の`results.id`をリストで渡す。\n（一応複数指定が可能になっている。ただ現状複数指定する機会は無い。）\n`calendar_id`は`/users/info`の`user_info.def_calendar`を渡す。\nレスポンスについて{\n・成功した時\n`success`の`kougi_id`に登録された講義のidが格納。\n・すでにコマに講義が入っている時\n`failures`の`kougi_id`に登録できなかった講義のidが格納。\n`failures`の`obstacles`に先に入っている講義の情報が格納（検索の返り値と同じ）。\n・エラーが出た時\n`errors`の`kougi_id`にエラーが出た講義のidが格納。\n`errors`の`error`にエラーメッセージが格納。\n}\n`failures`に値が格納されている時は、\nユーザーに確認を取って講義登録解除apiの`/kougi/delete`を実行し、\n再度 `/kougi/insert`を実行する。\nもしくは単純に失敗させて、ホームからしか解除できないようにする。\n`errors`に値が格納されている時はコードの修正が必要。\nつまり、`errors`に値は格納されてはいけない。",
+                apis: ["/kougi/insert", "/users/info", "/kougi/delete"]
+            },
+            {
+                title: "講義登録解除",
+                description: "ホーム、チャット、単純検索画面で講義の登録解除ボタンを押下した時、\n`/kougi/delete`に対象の講義の`results.id`をリストで渡して送信。\nレスポンスは`message`。",
+                apis: ["/kougi/delete"]
+            }
+        ];
+
+        const apiNav = document.getElementById('api-endpoint-nav');
+        const apiDetail = document.getElementById('api-endpoint-detail');
+        const apiFilter = document.getElementById('api-filter');
+
+        function formatJson(json) {
+            const jsonString = JSON.stringify(json, null, 2);
+            return jsonString.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return `<span class="${cls}">${match}</span>`;
+            });
+        }
+        
+        function createCodeBlock(data, title) {
+            if (data === undefined || data === null) return '';
+            const formatted = typeof data === 'string' ? data : formatJson(data);
+            const id = `code-${Math.random().toString(36).substr(2, 9)}`;
+            return `
+                <h4 class="text-md font-semibold mt-3 mb-1 text-sky-700">${title}</h4>
+                <div class="code-block-container relative group">
+                    <pre><code id="${id}">${formatted}</code></pre>
+                    <button onclick="copyToClipboard('${id}')" class="absolute top-2 right-2 bg-sky-500 hover:bg-sky-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">コピー</button>
+                </div>
+            `;
+        }
+
+        function displayApiDetail(api) {
+            let html = `
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-2xl font-bold text-sky-800">${api.path}</h2>
+                    <span class="text-sm font-semibold px-2 py-1 rounded-full
+                        ${api.method === 'GET' ? 'bg-green-100 text-green-700' :
+                          api.method === 'POST' ? 'bg-blue-100 text-blue-700' :
+                          api.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
+                          api.method === 'DELETE' ? 'bg-red-100 text-red-700' :
+                          'bg-gray-100 text-gray-700'}">${api.method.toUpperCase()}</span>
+                </div>
+                <p class="text-gray-600 mb-4">${api.summary}</p>
+                <hr class="my-4">
+                <h3 class="text-lg font-semibold mb-2 text-sky-700">リクエスト</h3>`;
+
+            if (api.id === 'calendar-cu') { // Special handling for /calendar/c-u/{mode}
+                html += `<p class="text-sm text-gray-500 mb-2">このエンドポイントは作成 (mode: 'c') と更新 (mode: 'u') の両方を扱います。</p>`;
+                html += `<h4 class="text-md font-semibold mt-3 mb-1 text-sky-600">作成 (mode: "c")</h4>`;
+                if (api.request.create_params) html += createCodeBlock(api.request.create_params, 'URL パラメータ');
+                if (api.request.create_body) html += createCodeBlock(api.request.create_body, 'リクエストボディ');
+                
+                html += `<h4 class="text-md font-semibold mt-3 mb-1 text-sky-600">更新 (mode: "u")</h4>`;
+                if (api.request.update_params) html += createCodeBlock(api.request.update_params, 'URL パラメータ');
+                if (api.request.update_body) html += createCodeBlock(api.request.update_body, 'リクエストボディ');
+            } else if (api.id === 'calendar-rd') { // Special handling for /calendar/r-d/{mode}
+                 html += `<p class="text-sm text-gray-500 mb-2">このエンドポイントは参照 (mode: 'r') と削除 (mode: 'd') の両方を扱います。</p>`;
+                html += `<h4 class="text-md font-semibold mt-3 mb-1 text-sky-600">参照 (mode: "r")</h4>`;
+                if (api.request.read_params) html += createCodeBlock(api.request.read_params, 'URL パラメータ');
+                 html += `<h4 class="text-md font-semibold mt-3 mb-1 text-sky-600">削除 (mode: "d")</h4>`;
+                if (api.request.delete_params) html += createCodeBlock(api.request.delete_params, 'URL パラメータ');
+            } else {
+                if (api.request.params) html += createCodeBlock(api.request.params, 'URL パラメータ');
+                if (api.request.body) html += createCodeBlock(api.request.body, 'リクエストボディ');
+                if (api.request.description) html += `<p class="text-sm bg-amber-50 p-3 rounded-md text-amber-700">${api.request.description.replace(/\n/g, '<br>')}</p>`;
+                if (!api.request.params && !api.request.body && !api.request.description) html += `<p class="text-sm text-gray-500">なし</p>`;
+            }
+
+            html += `<hr class="my-4">
+                     <h3 class="text-lg font-semibold mb-2 text-sky-700">レスポンス</h3>`;
+
+            if (api.id === 'calendar-cu') { // Special handling for /calendar/c-u/{mode} response
+                html += `<h4 class="text-md font-semibold mt-3 mb-1 text-sky-600">作成時 (mode: "c") のレスポンス</h4>`;
+                html += createCodeBlock(api.response.create_response, 'レスポンスボディ');
+                html += `<h4 class="text-md font-semibold mt-3 mb-1 text-sky-600">更新時 (mode: "u") のレスポンス</h4>`;
+                html += createCodeBlock(api.response.update_response, 'レスポンスボディ');
+            } else if (api.id === 'calendar-rd') { // Special handling for /calendar/r-d/{mode} response
+                html += `<h4 class="text-md font-semibold mt-3 mb-1 text-sky-600">参照時 (mode: "r") のレスポンス</h4>`;
+                html += createCodeBlock(api.response.read_response, 'レスポンスボディ');
+                html += `<h4 class="text-md font-semibold mt-3 mb-1 text-sky-600">削除時 (mode: "d") のレスポンス</h4>`;
+                html += createCodeBlock(api.response.delete_response, 'レスポンスボディ');
+            } else {
+                 html += createCodeBlock(api.response, 'レスポンスボディ');
+                 if (api.response.comment) html += `<p class="text-xs text-gray-500 mt-1">${api.response.comment}</p>`;
+            }
+
+
+            apiDetail.innerHTML = html;
+        }
+
+        function populateApiNav(filterText = '') {
+            apiNav.innerHTML = '';
+            const lowerFilterText = filterText.toLowerCase();
+            apiData
+                .filter(api => api.path.toLowerCase().includes(lowerFilterText) || api.summary.toLowerCase().includes(lowerFilterText))
+                .forEach(api => {
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.textContent = `${api.method.toUpperCase()} ${api.path}`;
+                    item.classList.add('api-endpoint-item', 'block', 'p-2', 'rounded-md', 'hover:bg-sky-100', 'transition-colors', 'text-sm');
+                    if (api.method === 'GET') item.classList.add('border-l-4', 'border-green-500');
+                    else if (api.method === 'POST') item.classList.add('border-l-4', 'border-blue-500');
+                    else if (api.method === 'PUT') item.classList.add('border-l-4', 'border-yellow-500');
+                    else if (api.method === 'DELETE') item.classList.add('border-l-4', 'border-red-500');
+                    else item.classList.add('border-l-4', 'border-gray-500');
+                    
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        document.querySelectorAll('.api-endpoint-item.active').forEach(activeItem => activeItem.classList.remove('active'));
+                        item.classList.add('active');
+                        displayApiDetail(api);
+                    });
+                    apiNav.appendChild(item);
+                });
+        }
+        
+        window.copyToClipboard = function(elementId) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                // Maybe show a temporary "Copied!" message
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        apiFilter.addEventListener('input', (e) => {
+            populateApiNav(e.target.value);
+        });
+        
+        populateApiNav();
+
+        // Usage Scenarios
+        const usageContent = document.getElementById('api-usage-content');
+        usageScenarios.forEach(scenario => {
+            const scenarioEl = document.createElement('div');
+            scenarioEl.classList.add('p-6', 'bg-white', 'rounded-lg', 'shadow');
+            let apisHtml = scenario.apis.map(apiPath => {
+                const foundApi = apiData.find(a => apiPath.includes(a.path.split('/{')[0])); // Basic matching
+                if (foundApi) {
+                     return `<a href="#" data-api-id="${foundApi.id}" class="api-link text-sky-600 hover:underline">${apiPath}</a>`;
+                }
+                return apiPath;
+            }).join(', ');
+
+            scenarioEl.innerHTML = `
+                <h3 class="text-xl font-semibold text-sky-700 mb-2">${scenario.title}</h3>
+                <p class="text-gray-700 whitespace-pre-line leading-relaxed mb-2">${scenario.description}</p>
+                <p class="text-sm text-gray-500">関連API: ${apisHtml || 'N/A'}</p>
+            `;
+            usageContent.appendChild(scenarioEl);
+        });
+        
+        usageContent.addEventListener('click', function(event) {
+            if (event.target.classList.contains('api-link')) {
+                event.preventDefault();
+                const apiId = event.target.dataset.apiId;
+                const apiToLink = apiData.find(a => a.id === apiId);
+                if (apiToLink) {
+                    // Switch to API specs tab
+                    document.querySelector('button[data-section="api-specs"]').click();
+                    // Find and click the nav item
+                    const navItems = document.querySelectorAll('#api-endpoint-nav .api-endpoint-item');
+                    navItems.forEach(item => {
+                        if (item.textContent.includes(apiToLink.path)) {
+                            item.click();
+                            // Scroll to the item if needed
+                            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                    });
+                }
+            }
+        });
+
+
+        // Main navigation
+        const mainNavButtons = document.querySelectorAll('#main-nav button');
+        const sections = document.querySelectorAll('.active-section');
+
+        mainNavButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                mainNavButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                const targetSectionId = button.dataset.section + '-section';
+                sections.forEach(section => {
+                    if (section.id === targetSectionId) {
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>
