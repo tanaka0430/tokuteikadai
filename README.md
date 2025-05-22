@@ -153,7 +153,7 @@ https://agu-syllabus.ddo.jp/
 swaggerのAPI仕様書(サーバ起動中のみ)
 [https://agu-syllabus.ddo.jp/api/](https://agu-syllabus.ddo.jp/api/)
 
-もしくは
+もしくは（内容が少し古い）
 [https://tanaka0430.github.io/tokuteikadai/](https://tanaka0430.github.io/tokuteikadai/)
 
 
@@ -339,7 +339,7 @@ REACT_APP_API_URL=https://agu-syllabus.ddo.jp/api
 →`faiss_index.bin`も年度ごとに作成する必要がある。<br>
 <br />
 
-・`npm install`に時間が掛かり過ぎるので、スワップ領域を設定する必要がある。<br>
+・`npm install`に時間が掛かり過ぎるので、スワップ領域を設定する必要がある（そもそもnode_moduleをリポジトリに含めるべきじゃない）。<br>
 <br />
 
 ・複数のクライアントが同時にAPIを呼び出すと処理に時間が掛かる。<br>
