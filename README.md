@@ -150,8 +150,11 @@ https://agu-syllabus.ddo.jp/
 
 ## API解説
 
-swaggerのAPI仕様書
+swaggerのAPI仕様書(サーバ起動中のみ)
 [https://agu-syllabus.ddo.jp/api/](https://agu-syllabus.ddo.jp/api/)
+
+もしくは
+[https://tanaka0430.github.io/tokuteikadai/](https://tanaka0430.github.io/tokuteikadai/)
 
 
 <br />
