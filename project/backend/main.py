@@ -70,7 +70,7 @@ def verify_password(stored_hash: str, password: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
 
 # Redisクライアントの初期化
-redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+redis_client = redis.StrictRedis(host='redis', port=6379, db=0)
 
 
 # セッションをRedisに保存する関数

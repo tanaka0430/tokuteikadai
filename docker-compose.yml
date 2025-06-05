@@ -16,6 +16,13 @@ services:
     volumes:
       - ./project/initdb/init.sql:/docker-entrypoint-initdb.d/init.sql
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -u root -prootpassword -e 'USE tokuteikadai;'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-network
 
   redis:
     image: redis:7.2
@@ -25,13 +32,16 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - app-network
 
   backend:
     build:
       context: ./project/backend
       dockerfile: Dockerfile
     container_name: backend
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    restart: "always"
+    # command: uvicorn main:app --host 0.0.0.0 --port 8000
     volumes:
       - ./project/backend:/app
     environment:
@@ -42,26 +52,39 @@ services:
       DB_NAME: tokuteikadai
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      OPENAI_API_KEY: "your_openai_api_key"
+      OPENAI_API_KEY: "***"
+
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "8000:8000"
+    networks:
+      - app-network
 
   frontend:
-    build:
-      context: ./project/frontend
-      dockerfile: Dockerfile
+    image: node:20-slim
     container_name: frontend
+    working_dir: /app
+    command: npm start
     environment:
-      - REACT_APP_API_URL=https://your-domain/api
+      - REACT_APP_API_URL=http://localhost:8000
+      - HOST=0.0.0.0
     volumes:
       - ./project/frontend:/app
     depends_on:
       - backend
     ports:
       - "3000:3000"
+    networks:
+      - app-network
 
   nginx:
     image: nginx:1.25
@@ -69,16 +92,23 @@ services:
     restart: always
     ports:
       - "80:80"
-      - "443:443"
+      #- "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./project/frontend/build:/usr/share/nginx/html:ro
-      - ./nginx/certbot/www:/var/www/certbot
-      - ./nginx/certbot/conf:/etc/letsencrypt
+      #- ./nginx/certbot/www:/var/www/certbot
+      #- ./nginx/certbot/conf:/etc/letsencrypt
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network 
 
 volumes:
   db_data:
   redis_data:
+
+networks:
+  app-network:
