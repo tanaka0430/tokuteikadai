@@ -1,0 +1,30 @@
+# シェルスクリプトは LF に強制（UNIX系）
+*.sh text eol=lf
+
+# Python も LF（推奨）
+*.py text eol=lf
+
+# JavaScript/TypeScript などのコードも LF
+*.js text eol=lf
+*.ts text eol=lf
+*.jsx text eol=lf
+*.tsx text eol=lf
+
+# HTML/CSS も LF
+*.html text eol=lf
+*.css text eol=lf
+
+# JSON/YAML は常に LF
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Markdown や README も LF
+*.md text eol=lf
+
+# バイナリファイルは自動変換しない
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
