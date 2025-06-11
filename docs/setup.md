@@ -1,6 +1,4 @@
 
-
-
 # セットアップ手順
 
 ## 1. Dockerのインストール
@@ -16,6 +14,29 @@
 ```bash
 docker compose version
 ````
+
+### 2.5. sudoなしでdockerコマンドを使う設定（Linuxの場合）
+
+* Dockerは通常root権限が必要なため、Linux環境では `sudo` をつけないとエラーになります。
+* 毎回 `sudo` を使いたくない場合は、以下の手順で現在のユーザーを `docker` グループに追加してください。
+
+```bash
+# docker グループを作成（存在しない場合のみ）
+sudo groupadd docker
+
+# 現在のユーザーを docker グループに追加
+sudo usermod -aG docker $USER
+```
+
+* その後、ログアウトして再ログインするか、PCを再起動してください。
+* 再ログイン後は、以下のように `sudo` なしで `docker` を使えるようになります。
+
+```bash
+docker ps
+docker compose up
+```
+
+> ⚠️ セキュリティ上の注意：`docker` グループに入れるとrootと同等の権限を持つため、信頼できるユーザーのみ追加してください。
 
 ## 3. Gitのインストール
 
@@ -81,7 +102,4 @@ docker exec -it mysql sh -c "mysql -u root -prootpassword tokuteikadai < /agu_sy
 ## 9. 動作確認
 
 * ブラウザで [http://localhost:3000](http://localhost:3000) などにアクセスし、画面が表示されればセットアップ完了です。
-
-
-
 
