@@ -37,6 +37,7 @@ app = FastAPI()
 origins = [
     "https://agu-syllabus.ddo.jp",
     "http://localhost:3000",
+    "http://localhost",
 ]
 
 app.add_middleware(
@@ -288,6 +289,8 @@ def api_check_user_kougi(
     calendar_id: int,
     db: Session = Depends(get_db)  
 ):
+    print("Request Headers:", request.headers)
+    print("Request Cookies:", request.cookies)
     success = []
     failures = []
     errors = []
@@ -324,6 +327,8 @@ def api_delete_user_kougi(
     calendar_id: int,
     db: Session = Depends(get_db)
 ):
+    print("Request Headers:", request.headers)
+    print("Request Cookies:", request.cookies)
     user_id = get_userid(request)
     
     owner_id = get_calendar(calendar_id,db).user_id

@@ -11,4 +11,9 @@ COPY . /app
 
 RUN chmod +x /app/wait-for-it.sh
 
+<<<<<<< HEAD
+CMD ["/app/wait-for-it.sh", "db", "3306", "--", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+=======
 CMD ["/app/wait-for-it.sh", "db", "3306", "--", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+>>>>>>> c960db63d932fc82787317fbcffe4e330d29f1c8

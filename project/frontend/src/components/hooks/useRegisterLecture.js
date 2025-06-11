@@ -29,6 +29,7 @@ export const useRegisterLecture = () => {
         {
           params: { calendar_id: Number(calendarId) },
           headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
         }
       );
 
@@ -57,6 +58,7 @@ export const useRegisterLecture = () => {
         params: { calendar_id: Number(calendarId) },
         data: [kougi_id],
         headers: { 'Content-Type': 'application/json' },
+        withCredentials: true,
       });
 
       setRegisteredLectures((prev) => ({
