@@ -3,6 +3,12 @@
 
 2024年度特定課題演習情報システム開発班にて開発。
 
+<br /><br />
+
+**本readmeの内容は古い部分が多いので、以下のnotebooklmの方が正確。**
+<br />
+https://notebooklm.google.com/notebook/c3771887-9a8f-496e-bbf9-14cb119e656d
+
 <br />
 
 ##  アプリケーションのURL
